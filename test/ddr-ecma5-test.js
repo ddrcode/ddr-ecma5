@@ -23,9 +23,9 @@ var utils = {
 			}
 			if( arr1[i].compare && !arr1.compare(arr2[i]) ) 
 				return false;
-	        	if (arr1[i] !== arr2[i]) 
-	        		return false;
-	    	}
+			if (arr1[i] !== arr2[i]) 
+				return false;
+	    }
 		return true;
 	},
 	
@@ -66,8 +66,10 @@ var utils = {
 		arr[1] = 2; arr[4] = 5;
 		var len = 0;
 		
-		arr[mth]( function(){ return ++len;} );
-		ok( len === 2, "arr."+mth+"( function(){ return ++len;} )" );
+		if( mth !== "some" ) { // ugly exception for 'some' method, which exits after finding first matching element
+			arr[mth]( function(){ return ++len;} );
+			ok( len === 2, "arr."+mth+"( function(){ return ++len;} )" );
+		}
 		
 		var arr2 = ["a"];
 		arr2[mth](function(item, idx, a){
@@ -170,6 +172,19 @@ test( "String.prototype.trim", function(){
 
 
 //-----------------------------------------------------------------
+// Array tests
+
+test( "Array.isArray", function(){
+
+	ok( Array.isArray, "method existence verification" );
+	
+	ok( Array.isArray([1,2]), "isArray returns true for an array" );
+	ok( Array.isArray([]), "isArray returns true for an empty array" );
+	ok( !Array.isArray(2), "isArray returns false for a non-array" );
+	ok( !Array.isArray(null), "isArray returns false for a null" );
+});
+
+//-----------------------------------------------------------------
 // Array.prototype tests
 
 test( "Array.prototype.indexOf", function(){
@@ -191,6 +206,15 @@ test( "Array.prototype.indexOf", function(){
 	ok( arr.indexOf(undefined) === -1, "arr.indexOf(undefined)" );
 	arr[3] = undefined;
 	ok( arr.indexOf(undefined) === 3, "arr.indexOf(undefined)" );
+	
+	var C = function(val){
+		this.value = val;
+	};
+	C.prototype.equals = function(o1, o2) {
+		return o1.value === o2.value;
+	};
+	arr = [ new C(1), new C('A') ];
+	ok( arr.indexOf(new C('A')) === -1, "arr.indexOf(new C('A')) === 1" );
 
 	ok( Array.prototype.indexOf.length === 1, "Method length" );
 });
@@ -209,6 +233,12 @@ test( "Array.prototype.lastIndexOf", function(){
 	ok( arr.lastIndexOf('q') === -1, "arr.lastIndexOf('q')" );
 	ok( arr.lastIndexOf('a', -10) === -1, "arr.lastIndexOf('a',-10)" );
 	ok( arr.lastIndexOf('a', 100) === 0, "arr.lastIndexOf('a',100)" );
+
+	arr = new Array;
+	arr[4] = 'x';
+	ok( arr.lastIndexOf(undefined) === -1, "arr.lastIndexOf(undefined)" );
+	arr[3] = undefined;
+	ok( arr.lastIndexOf(undefined) === 3, "arr.lastIndexOf(undefined)" );
 	
 	ok( Array.prototype.lastIndexOf.length === 1, "Method length" );
 });	
@@ -385,10 +415,23 @@ test( "Date.prototype.toISOString", function(){
 
 
 test( "Date.prototype.toJSON", function() {
-	ok( Date.prototype.toJSON, "method existence veryfication" );
+	ok( Date.prototype.toJSON, "method existence verification" );
 	ok( typeof Date.prototype.toJSON === 'function', "Date.prototype.toJSON should be a function" );
 	
-	ok( false, "Detailed tests missing" );
+	var d = new Date().toJSON();
+	ok( d.length === 24 || d.length === 20, "ISO Date string should be 24 characters long" );
+	ok( d.match(/^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/), "toJSON() result matches /^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/ pattern" );
+	
+	var zd = new Date(0).toJSON(); 
+	ok( zd === '1970-01-01T00:00:00.000Z' || zd === '1970-01-01T00:00:00Z', "new Date(0).toJSON() should return '1970-01-01T00:00:00.000Z' or '1970-01-01T00:00:00Z'" );
+	
+	// most of the browsers gives error here ("Invalid date") which is not right according to ECMAScript 5 Specification
+	ok( new Date(Infinity).toJSON() === null, "new Data(Infinity).toJSON() should be null" );
+	// most of the browsers gives error here ("Invalid date") which is not right according to ECMAScript 5 Specification
+	ok( new Date(NaN).toJSON() === null, "new Data(NaN).toJSON() should be null" );
+	
+	// most of the browser won't allow to use other types than Date here
+	ok( new Date(0).toJSON.call('abc') === null, "new Date(0).toJSON.call('abc') should be null" ); 
 });
 
 

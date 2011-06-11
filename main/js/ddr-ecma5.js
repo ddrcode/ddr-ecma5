@@ -1,25 +1,26 @@
-/*  ddr-ECMA5 JavaScript library, version 1.0RC1
+/*  ddr-ECMA5 JavaScript library, version 1.0.2
  *  (c) 2010 David de Rosier
  *
  *  Licensed under the MIT license.
  *  http://www.opensource.org/licenses/mit-license.php
  *
- *  Revision: 7
- *  Date: 09.03.2010
+ *  Revision: 11
+ *  Date: 10.06.2011
  */
 
-"use strict";
 
 (function(){
+
+	"use strict";
 
 	//-----------------------------------------------------------------------
 	// Function.prototype extensions
 	
 	/**
 	 * Binds the function to a context and returns a wrapper function.
-	 * Practically it 'converts' a method to a functions with remembering 
+	 * Practically it 'converts' a method to a function with remembering 
 	 * the context.
-	 * ECMA5 Reference: 15.3.4.5
+	 * ECMAScript 5 Reference: 15.3.4.5
 	 * @param ctx {object} method's context
 	 * @return {function} wrapped function
 	 * @example var flatFunction = obj.method.bind(obj);
@@ -41,7 +42,7 @@
 	
 	/**
 	 * Returns an array of object's own property names.
-	 * ECMA5 Reference: 15.2.3.14
+	 * ECMAScript 5 Reference: 15.2.3.14
 	 * @param obj {object} 
 	 * @return {Array} array of own property names
 	 * @throws TypeError if the parameter is not an object
@@ -63,7 +64,7 @@
 	 * Returns a prototype of an object. In this implementation the method tries to
 	 * use __proto__ attribute (for Spider/Trace-Monkey and Rhino) or constructor.prototype
 	 * reference which won't work for the overriden constructor property
-	 * ECMA5 Reference: 15.2.3.2
+	 * ECMAScript 5 Reference: 15.2.3.2
 	 * @param obj {object} 
 	 * @return {object} Object's prototype
 	 * @example Object.getPrototypeOf([]) === Array.prototype;
@@ -90,7 +91,7 @@
 	 * its prototype to given parameter. Function returns an instance of such created object.
 	 * WARNING! The original ECMA 5 method takes an optional parameter - property descriptions.
 	 * Cause property descriptions cannot be implemented with ECMA 3, this parameter will be skipped. 
-	 * ECMA5 Reference: 15.2.3.5
+	 * ECMAScript 5 Reference: 15.2.3.5
 	 * @param proto {object} a prototype of new object
 	 * @param properties {object} property descriptions - UNUSED in this implementation!
 	 * @return new object with given prototype
@@ -116,7 +117,7 @@
 	 * and new line characters.
 	 * Method implements probably the fastest algorithm of JavaScript trim operation
 	 * (see http://blog.stevenlevithan.com/archives/faster-trim-javascript)
-	 * ECMA5 Reference: 15.5.4.20
+	 * ECMAScript 5 Reference: 15.5.4.20
 	 * return {string} trimmed string
 	 */
 	String.prototype.trim || (String.prototype.trim = function(){
@@ -126,12 +127,27 @@
 	
 	//-----------------------------------------------------------------------
 	// Array extensions	
-
 	
+	/**
+	 *  ECMAScript 5 Reference: 15.4.3.2
+	 *  Tests if passed object is an Array
+	 *  @since 1.0.1, revision 9 (thanks to dudleyflanders)
+	 *  @param obj object to be tested
+	 *  @return {boolean} true if input parameter is an object false in any other case
+	 *  @example Array.isArray([]) === true;
+	 */
+	Array.isArray || (Array.isArray = function(obj) {
+		return Object.prototype.toString.call(obj) === "[object Array]" || (obj instanceof Array);
+	});	
+	
+	
+	//-----------------------------------------------------------------------
+	// Array prototype extensions		
+
 	var $AP = Array.prototype;
 	
 	/**
-	 * ECMA5 Reference: 15.4.4.14
+	 * ECMAScript 5 Reference: 15.4.4.14
 	 * According to specification Array.prototype.indexOf.length is 1
 	 * @param searchElement - 
 	 * @param fromIndex {number} - start index (optional)
@@ -151,7 +167,7 @@
 		}
 		
 		for( ; i < len; ++i ) {
-			if( this[i] ===  searchElement )
+			if( this.hasOwnProperty(String(i)) && this[i] ===  searchElement )
 				return i;
 		}
 		
@@ -160,7 +176,7 @@
 
 	
 	/**
-	 * ECMA5 Reference: 15.4.4.15
+	 * ECMAScript 5 Reference: 15.4.4.15
 	 * According to specification Array.prototype.lastIndexOf.length is 1
 	 * @param searchElement -
 	 * @param fromIndex {number} - start index (optional)
@@ -181,7 +197,7 @@
 		}
 		
 		for( ; i >= 0; --i ) {
-			if( this[i] ===  searchElement )
+			if( this.hasOwnProperty(String(i)) && this[i] ===  searchElement )
 				return i;
 		}
 		
@@ -190,7 +206,7 @@
 	
 
 	/**
-	 * ECMA5 Reference: 15.4.4.16
+	 * ECMAScript 5 Reference: 15.4.4.16
 	 */
 	$AP.every || ($AP.every = function(callback){
 		if( typeof callback !== 'function' )
@@ -209,7 +225,7 @@
 	
 	
 	/**
-	 * ECMA5 Reference: 15.4.4.17
+	 * ECMAScript 5 Reference: 15.4.4.17
 	 */
 	$AP.some || ($AP.some = function(callback){
 		if( typeof callback !== 'function' )
@@ -228,7 +244,7 @@
 	
 
 	/**
-	 * ECMA5 Reference: 15.4.4.18
+	 * ECMAScript 5 Reference: 15.4.4.18
 	 */
 	$AP.forEach || ($AP.forEach = function(callback){
 		if( typeof callback !== 'function' )
@@ -244,7 +260,7 @@
 
 
 	/**
-	 * ECMA5 Reference: 15.4.4.19
+	 * ECMAScript 5 Reference: 15.4.4.19
 	 */
 	$AP.map || ($AP.map = function(callback){
 		if( typeof callback !== 'function' )
@@ -264,7 +280,7 @@
 	
 	
 	/**
-	 * ECMA5 Reference: 15.4.4.20
+	 * ECMAScript 5 Reference: 15.4.4.20
 	 */
 	$AP.filter || ($AP.filter = function(callback){
 		if( typeof callback !== 'function' )
@@ -284,7 +300,7 @@
 	
 	
 	/**
-	 * ECMA5 Reference: 15.4.4.21
+	 * ECMAScript 5 Reference: 15.4.4.21
 	 */
 	$AP.reduce || ($AP.reduce = function(callback){
 		if( typeof callback !== 'function' )
@@ -296,13 +312,7 @@
 		
 		var initIdx = -1;
 		if( arguments.length < 2 ) {
-			for( var k=0; k < len; ++k ) {
-				if( this.hasOwnProperty(String(k)) ) {
-					initIdx = k;
-					break;
-				}
-			}
-			if( initIdx === -1 )
+			if( (initIdx = _firstIndex(this)) === -1 )
 				throw _typeError( "reduce of empty array with no initial value" );				
 		}
 		
@@ -319,7 +329,7 @@
 	
 	
 	/**
-	 * ECMA5 Reference: 15.4.4.22
+	 * ECMAScript 5 Reference: 15.4.4.22
 	 */
 	$AP.reduceRight || ($AP.reduceRight = function(callback){
 		if( typeof callback !== 'function' )
@@ -360,7 +370,7 @@
 	/**
 	 * Numeric representation of current time
 	 * @example var timestamp = Date.now();
-	 * ECMA5 Reference: 15.9.4.4
+	 * ECMAScript 5 Reference: 15.9.4.4
 	 */
 	Date.now || (Date.now = function(){
 		return +new Date;
@@ -368,7 +378,7 @@
 
 	
 	/**
-	 * ECMA5 Reference: 15.9.5.43
+	 * ECMAScript 5 Reference: 15.9.5.43
 	 */
 	Date.prototype.toISOString || (Date.prototype.toISOString = (function(){
 		
@@ -396,12 +406,12 @@
 	
 	
 	/**
-	 * ECMA5 Reference: 15.9.5.44
+	 * ECMAScript 5 Reference: 15.9.5.44
 	 */
 	Date.prototype.toJSON || (Date.prototype.toJSON = function(key){ 
 		if( !isFinite(this) ) 
 			return null;
-		if( !this.toISOString )
+		if( !this.toISOString || typeof this.toISOString !== 'function' )
 			throw _typeError( "Date.prototype.toJSON called on incompatible " + (typeof this) );
 		
 		return this.toISOString();
@@ -411,17 +421,40 @@
 	//-----------------------------------------------------------------------
 	// Private Utils
 
+	/**
+	 * @private
+	 */
 	var _toArray = function(obj, idx1, idx2) {
 		var args = $AP.slice.call( arguments, 1);
 		return $AP.slice.apply( obj, args );
 	};
 	
+	/**
+	 * Check whether passed argument is an object (considering the fact that function is an object too)
+	 * @private
+	 */
 	var _isObject = function(obj) {
 		return obj && ( typeof obj === 'object' || typeof obj === 'function' );
 	};
 
+	/**
+	 * @private
+	 */
 	var _typeError = function(msg) {
-		return new TypeError( "Type error: " + msg);
+		return new TypeError(msg);
+	};
+	
+	/**
+	 * Returns first valid index of an array
+	 * @private
+	 */
+	var _firstIndex = function(arr) {
+		for( var k=0, len=arr.length; k < len; ++k ) {
+			if( arr.hasOwnProperty(String(k)) ) {
+				return k;
+			}
+		}	
+		return -1;
 	};
 	
 })();
