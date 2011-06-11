@@ -1,11 +1,11 @@
-/*  ddr-ECMA5 JavaScript library, version 1.0.2
+/*  ddr-ECMA5 JavaScript library, version 1.1RC1
  *  (c) 2010 David de Rosier
  *
  *  Licensed under the MIT license.
  *  http://www.opensource.org/licenses/mit-license.php
  *
- *  Revision: 11
- *  Date: 10.06.2011
+ *  Revision: 12
+ *  Date: 11.06.2011
  */
 
 
@@ -27,7 +27,7 @@
 	 */
 	Function.prototype.bind || (Function.prototype.bind = function(ctx){
 		if( typeof this !== 'function' )
-			throw _typeError( "'this' is not a function" );
+			throw new TypeError( "'this' is not a function" );
 		var fn = this, 
 			args = _toArray(arguments,1);
 			
@@ -50,7 +50,7 @@
 	 */	 
 	Object.keys || (Object.keys = function(obj){
 		if( !_isObject(obj) ) 
-			throw _typeError( obj + " is not an object" );
+			throw new TypeError( obj + " is not an object" );
 		
 		var results = [];
 		for(var key in obj) {
@@ -73,13 +73,13 @@
 		if( "".__proto__ ) {
 			Object.getPrototypeOf = function(obj) {
 				if( !_isObject(obj) ) 
-					throw _typeError( obj + " is not an object" );
+					throw new TypeError( obj + " is not an object" );
 				return obj.__proto__;
 			};
 		} else {
 			Object.getPrototypeOf = function(obj) {
 				if( !_isObject(obj) ) 
-					throw _typeError( obj + " is not an object" );
+					throw new TypeError( obj + " is not an object" );
 				return obj.constructor ? obj.constructor.prototype : null;
 			};
 		}
@@ -99,7 +99,7 @@
 	 */
 	Object.create || ( Object.create = function(proto, properties) {
 		if( !_isObject(proto) ) 
-			throw _typeError( proto + " is not an object" );
+			throw new TypeError( proto + " is not an object" );
 		
 		var F = function(){};
 		F.prototype = proto;
@@ -107,6 +107,43 @@
 		
 		return new F();
 	});
+
+
+	/**
+	 * ECMAScript 5 Reference: 15.2.3.11
+	 * @param {object} 
+	 * @return {boolean} 
+	 */
+	Object.isSealed || ( Object.isSealed = function(obj){ 
+		if( !_isObject(obj) ) 
+			throw new TypeError( obj+" is not an object" );
+		return false; 
+	});
+	
+	
+	/**
+	 * ECMAScript 5 Reference: 15.2.3.12
+	 * @param {object} 
+	 * @return {boolean} 
+	 */	
+	Object.isFrozen || ( Object.isFrozen = function(obj){
+		if( !_isObject(obj) ) 
+			throw new TypeError( obj+" is not an object" );
+		return false; 		
+	});
+	
+	
+	/**
+	 * Checks whether the object structure can be extended.
+	 * ECMAScript 5 Reference: 15.2.3.13
+	 * @param {object} 
+	 * @return {boolean} 
+	 */
+	Object.isExtensible || ( Object.isExtensible = function(obj){ 
+		if( !_isObject(obj) ) 
+			throw new TypeError( obj+" is not an object" );
+		return true; 
+	});	
 	
 	
 	//-----------------------------------------------------------------------
@@ -210,7 +247,7 @@
 	 */
 	$AP.every || ($AP.every = function(callback){
 		if( typeof callback !== 'function' )
-			throw _typeError( callback + " is not a function" );
+			throw new TypeError( callback + " is not a function" );
 
 		var thisArg = arguments[1]; 
 		for(var i=0, len=this.length; i < len; ++i) {
@@ -229,7 +266,7 @@
 	 */
 	$AP.some || ($AP.some = function(callback){
 		if( typeof callback !== 'function' )
-			throw _typeError( callback + " is not a function" );
+			throw new TypeError( callback + " is not a function" );
 
 		var thisArg = arguments[1]; 
 		for(var i=0, len=this.length; i < len; ++i) {
@@ -248,7 +285,7 @@
 	 */
 	$AP.forEach || ($AP.forEach = function(callback){
 		if( typeof callback !== 'function' )
-			throw _typeError( callback + " is not a function" );
+			throw new TypeError( callback + " is not a function" );
 
 		var thisArg = arguments[1]; 
 		for(var i=0, len=this.length; i < len; ++i) {
@@ -264,7 +301,7 @@
 	 */
 	$AP.map || ($AP.map = function(callback){
 		if( typeof callback !== 'function' )
-			throw _typeError( callback + " is not a function" );
+			throw new TypeError( callback + " is not a function" );
 
 		var thisArg = arguments[1],
 			len = this.length,
@@ -284,7 +321,7 @@
 	 */
 	$AP.filter || ($AP.filter = function(callback){
 		if( typeof callback !== 'function' )
-			throw _typeError( callback + " is not a function" );
+			throw new TypeError( callback + " is not a function" );
 
 		var thisArg = arguments[1],
 			len = this.length,
@@ -304,16 +341,16 @@
 	 */
 	$AP.reduce || ($AP.reduce = function(callback){
 		if( typeof callback !== 'function' )
-			throw _typeError( callback + " is not a function" );
+			throw new TypeError( callback + " is not a function" );
 		
 		var len = this.length;
 		if( len === 0 && arguments.length < 2 )
-			throw _typeError( "reduce of empty array with no initial value" );
+			throw new TypeError( "reduce of empty array with no initial value" );
 		
 		var initIdx = -1;
 		if( arguments.length < 2 ) {
 			if( (initIdx = _firstIndex(this)) === -1 )
-				throw _typeError( "reduce of empty array with no initial value" );				
+				throw new TypeError( "reduce of empty array with no initial value" );				
 		}
 		
 		var val = arguments.length > 1 ? arguments[1] : this[initIdx];
@@ -333,11 +370,11 @@
 	 */
 	$AP.reduceRight || ($AP.reduceRight = function(callback){
 		if( typeof callback !== 'function' )
-			throw _typeError( callback + " is not a function" );
+			throw new TypeError( callback + " is not a function" );
 		
 		var len = this.length;
 		if( len === 0 && arguments.length < 2 )
-			throw _typeError( "reduce of empty array with no initial value" );
+			throw new TypeError( "reduce of empty array with no initial value" );
 		
 		var initIdx = len;
 		if( arguments.length < 2 ) {
@@ -348,7 +385,7 @@
 				}
 			}
 			if( initIdx === len )
-				throw _typeError( "reduce of empty array with no initial value" );				
+				throw new TypeError( "reduce of empty array with no initial value" );				
 		}		
 		
 		var val = arguments.length > 1 ? arguments[1] : this[initIdx];
@@ -412,7 +449,7 @@
 		if( !isFinite(this) ) 
 			return null;
 		if( !this.toISOString || typeof this.toISOString !== 'function' )
-			throw _typeError( "Date.prototype.toJSON called on incompatible " + (typeof this) );
+			throw new TypeError( "Date.prototype.toJSON called on incompatible " + (typeof this) );
 		
 		return this.toISOString();
 	});
@@ -435,13 +472,6 @@
 	 */
 	var _isObject = function(obj) {
 		return obj && ( typeof obj === 'object' || typeof obj === 'function' );
-	};
-
-	/**
-	 * @private
-	 */
-	var _typeError = function(msg) {
-		return new TypeError(msg);
 	};
 	
 	/**

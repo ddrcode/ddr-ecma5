@@ -154,6 +154,41 @@ test( "Object.create", function(){
 });
 
 
+test( "Object.isSealed", function(){
+	
+	ok( Object.isSealed, "method existence veryfication" );
+	ok( Object.isSealed({}) === false, "Object.isSealed({}) === false" );
+	if( Object.seal ) {
+		ok( Object.isSealed(Object.seal({})) === true, "Object.isSealed(Object.seal({})) === true" );
+	}
+	ok( utils.assertError(function(){Object.isSealed(123)}), "Object.isSealed with non-object argument should throw TypeError" );
+	
+});
+
+
+test( "Object.isFrozen", function(){
+	
+	ok( Object.isFrozen, "method existence veryfication" );
+	ok( Object.isFrozen({}) === false, "Object.isFrozen({}) === false" );
+	if( Object.freeze ) {
+		ok( Object.isFrozen(Object.freeze({})) === true, "Object.isFrozen(Object.freeze({})) === true" );
+	}	
+	ok( utils.assertError(function(){Object.isFrozen(123)}), "Object.isFrozen with non-object argument should throw TypeError" );
+	
+});
+
+
+test( "Object.isExtensible", function(){
+	
+	ok( Object.isExtensible, "method existence veryfication" );
+	ok( Object.isExtensible({}) === true, "Object.isExtensible({}) === true" );
+	if( Object.seal ) {
+		ok( Object.isExtensible(Object.seal({})) === false, "Object.isExtensible(Object.seal({})) === false" );
+	}	
+	ok( utils.assertError(function(){Object.isExtensible(123)}), "Object.isFrozen with non-object argument should throw TypeError" );
+	
+});
+
 //-----------------------------------------------------------------
 // String.prototype tests
 
