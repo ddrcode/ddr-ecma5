@@ -366,6 +366,11 @@
 	
 	
 	/**
+	 * Works like Array.prototype.reduce, but starts from the end of an array
+	 * @param {callable} callback function
+	 * @returns {any} value of reduce; single value
+	 * @see Array.prototype.reduce
+	 * @example [10,20,30].reduceRight(function(a,b){return a-b;}) === 0
 	 * ECMAScript 5 Reference: 15.4.4.22
 	 */
 	$AP.reduceRight || ($AP.reduceRight = function(callback){
@@ -405,7 +410,7 @@
 	
 	
 	/**
-	 * Numeric representation of current time
+	 * Numeric representation of current time (in milliseconds)
 	 * @example var timestamp = Date.now();
 	 * ECMAScript 5 Reference: 15.9.4.4
 	 */
@@ -462,7 +467,7 @@
 	 * @private
 	 */
 	var _toArray = function(obj, idx1, idx2) {
-		var args = $AP.slice.call( arguments, 1);
+		var args = $AP.slice.call( arguments, 1 );
 		return $AP.slice.apply( obj, args );
 	};
 	
