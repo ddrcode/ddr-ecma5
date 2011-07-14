@@ -1,10 +1,10 @@
-/*  ddr-ECMA5 JavaScript library, version 1.2RC1
+/*  ddr-ECMA5 JavaScript library, version 1.2RC2
  *  (c) 2010 David de Rosier
  *
  *  Licensed under the MIT license.
  *  http://www.opensource.org/licenses/mit-license.php
  *
- *  Revision: 13
+ *  Revision: 14
  *  Date: 14.07.2011
  */
 
@@ -152,6 +152,51 @@
 		return true; 
 	});	
 	
+	
+	/**
+	 * Returns property descriptor for property of given object
+	 * ECMAScript 5 Reference: 15.2.3.3
+	 * @since 1.2
+	 * @param {object} obj an object
+	 * @param {string} pname property name to test
+	 * @returns {object} property descriptor or undefined
+	 * @throws {TypeError} when obj is null or not an object
+	 * @example Object.getOwnPropertyDescriptor(Array.prototype, "length");
+	 */
+	Object.getOwnPropertyDescriptor || ( Object.getOwnPropertyDescriptor = (function(){
+		
+		var __NUMBER_CONSTS = ['MAX_VALUE', 'MIN_VALUE','NaN','POSITIVE_INFINITY','NEGATIVE_INFINITY'],
+			__MATH_CONSTS = ['PI','E','LN2','LOG2E','LOG10E','SQRT1_2','SQRT2'];
+		
+		return function(obj, pname){
+			if( !_isObject(obj) ) 
+				throw new TypeError( obj+" is not an object" );
+			
+			if( !(pname in obj) )
+				return;
+			
+			var editable = true,
+				configurable = true;
+			
+			// recognize the only cases when ECMAScript 3 protects properties
+			if( (obj===Number && __NUMBER_CONSTS.indexOf(pname)>=0) 
+					|| (obj===Math && __MATH_CONSTS.indexOf(pname)>=0) 
+					|| (pname=='length' && (obj===String.prototype || obj instanceof String 
+							|| obj===Function.prototype || obj instanceof Function)) ) {
+				editable = false;
+				configurable = false;
+			} else if( pname=='length' && (obj===Array.prototype || Array.isArray(obj)) ) {
+				configurable = false;
+			} 
+			
+			return {
+				writable: editable,
+				enumerable: obj.propertyIsEnumerable ? obj.propertyIsEnumerable(pname) : true,
+				configurable: configurable,
+				value: obj[pname]
+			};
+		}
+	})());	
 	
 	
 	//-----------------------------------------------------------------------

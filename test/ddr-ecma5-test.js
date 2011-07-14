@@ -197,6 +197,36 @@ test( "Object.isExtensible", function(){
 	
 });
 
+
+test( "Object.getOwnPropertyDescriptor", 15, function(){
+	
+	ok( Object.getOwnPropertyDescriptor, "method existence veryfication" );
+	
+	var dsc = Object.getOwnPropertyDescriptor( {test:5}, "test" );
+	ok( dsc.value === 5, 'Object.getOwnPropertyDescriptor({test:5}, "test").value === 5' );
+	ok( dsc.writable === true, 'Object.getOwnPropertyDescriptor({test:5}, "test").writable === true' );
+	ok( dsc.enumerable === true, 'Object.getOwnPropertyDescriptor({test:5}, "test").enumerable === true' );
+	ok( dsc.configurable === true, 'Object.getOwnPropertyDescriptor({test:5}, "test").configurable === true' );
+	
+	dsc = Object.getOwnPropertyDescriptor( Number, "POSITIVE_INFINITY" );
+	ok( dsc.value === Number.POSITIVE_INFINITY, 'Object.getOwnPropertyDescriptor(Number, "POSITIVE_INFINITY").value === Number.POSITIVE_INFINITY' );
+	ok( dsc.writable === false, 'Object.getOwnPropertyDescriptor(Number, "POSITIVE_INFINITY").writable === false' );
+	ok( dsc.enumerable === false, 'Object.getOwnPropertyDescriptor(Number, "POSITIVE_INFINITY").enumerable === false' );
+	ok( dsc.configurable === false, 'Object.getOwnPropertyDescriptor(Number, "POSITIVE_INFINITY").configurable === false' );	
+	
+	dsc = Object.getOwnPropertyDescriptor( [], "length" );
+	ok( dsc.writable === true, 'Object.getOwnPropertyDescriptor([], "length").writable === true' );
+	ok( dsc.enumerable === false, 'Object.getOwnPropertyDescriptor([], "length").enumerable === false' );
+	ok( dsc.configurable === false, 'Object.getOwnPropertyDescriptor([], "length").configurable === false');
+	
+	dsc = Object.getOwnPropertyDescriptor( Math, "PI" );
+	ok( dsc.writable === false, 'Object.getOwnPropertyDescriptor(Math, "PI").writable === false' );
+	ok( dsc.enumerable === false, 'Object.getOwnPropertyDescriptor(Math, "PI").enumerable === false' );
+	ok( dsc.configurable === false, 'Object.getOwnPropertyDescriptor(Math, "PI").configurable === false');	
+});
+
+
+
 //-----------------------------------------------------------------
 // String.prototype tests
 
