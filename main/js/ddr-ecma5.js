@@ -1,11 +1,11 @@
-/*  ddr-ECMA5 JavaScript library, version 1.1RC1
+/*  ddr-ECMA5 JavaScript library, version 1.2RC1
  *  (c) 2010 David de Rosier
  *
  *  Licensed under the MIT license.
  *  http://www.opensource.org/licenses/mit-license.php
  *
- *  Revision: 12
- *  Date: 11.06.2011
+ *  Revision: 13
+ *  Date: 14.07.2011
  */
 
 
@@ -89,24 +89,31 @@
 	/**
 	 * Creates a new object with given prototype. The function creates a new constructor and assigns
 	 * its prototype to given parameter. Function returns an instance of such created object.
-	 * WARNING! The original ECMA 5 method takes an optional parameter - property descriptions.
-	 * Cause property descriptions cannot be implemented with ECMA 3, this parameter will be skipped. 
+	 * WARNING! The original ECMAScript 5 method takes an optional parameter - property descriptions.
+	 * Because property descriptions cannot be implemented with ECMAScript 3, this parameter will be skipped. 
 	 * ECMAScript 5 Reference: 15.2.3.5
-	 * @param proto {object} a prototype of new object
-	 * @param properties {object} property descriptions - UNUSED in this implementation!
-	 * @return new object with given prototype
+	 * @param {object} proto a prototype of new object
+	 * @param {object} [properties] property descriptions - UNUSED in this implementation!
+	 * @returns new object with given prototype
+	 * @throws {TypeError} when proto is not an object
 	 * @example var newMe = Object.create( {me: 'test'} );
 	 */
-	Object.create || ( Object.create = function(proto, properties) {
-		if( !_isObject(proto) ) 
-			throw new TypeError( proto + " is not an object" );
+	Object.create || ( Object.create = (function(){
+
+		/**
+		 * Moved outside the function to eliminate the closure memory effect
+		 * @private
+		 */
+		var __TmpConstructor = function(){};
 		
-		var F = function(){};
-		F.prototype = proto;
-		F.prototype.constructor = F;
-		
-		return new F();
-	});
+		return function(proto, properties) {
+			if( !_isObject(proto) ) 
+				throw new TypeError( proto + " is not an object" );
+			
+			__TmpConstructor.prototype = proto;
+			return new __TmpConstructor();
+		};
+	})());
 
 
 	/**
@@ -144,6 +151,7 @@
 			throw new TypeError( obj+" is not an object" );
 		return true; 
 	});	
+	
 	
 	
 	//-----------------------------------------------------------------------
@@ -491,5 +499,5 @@
 		}	
 		return -1;
 	};
-	
+
 })();

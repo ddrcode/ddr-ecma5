@@ -140,14 +140,22 @@ test( "Object.getPrototypeOf", function(){
 });
 	
 
-test( "Object.create", function(){
+test( "Object.create", 6, function(){
 	
 	ok( Object.create, "method existence veryfication" );
 	
-	var proto = { test: "ECMA5" };
+	var proto = { test: "ECMAScript5" };
 	var copy = Object.create( proto );
 	
-	ok( Object.getPrototypeOf(copy) === proto, "New object prototype should be a reference to original object" );
+	ok( proto.constructor === copy.constructor, "Both object should share the same constructor" );
+	
+	if( proto.__proto__ )
+		ok( Object.getPrototypeOf(copy) === proto, "The original object should be a prototype of a new object" );
+	else {
+		proto.test2 = "DDR-Ecma5";
+		ok( copy.test2 && !copy.hasOwnProperty("test2"), "The original object should be a prototype of a new object" );
+	}
+	
 	ok( copy !== proto, "New object itself shouldn't be a reference to original object" );
 	ok( !copy.hasOwnProperty("test"), "Prototype attribute shouldn't be an own attribute of new object" );
 	ok( utils.assertError(function(){ Object.create(); }), "Object.create without object attribute should throw exception" );
