@@ -198,7 +198,7 @@ test( "Object.isExtensible", function(){
 });
 
 
-test( "Object.getOwnPropertyDescriptor", 15, function(){
+test( "Object.getOwnPropertyDescriptor", 17, function(){
 	
 	ok( Object.getOwnPropertyDescriptor, "method existence veryfication" );
 	
@@ -222,9 +222,90 @@ test( "Object.getOwnPropertyDescriptor", 15, function(){
 	dsc = Object.getOwnPropertyDescriptor( Math, "PI" );
 	ok( dsc.writable === false, 'Object.getOwnPropertyDescriptor(Math, "PI").writable === false' );
 	ok( dsc.enumerable === false, 'Object.getOwnPropertyDescriptor(Math, "PI").enumerable === false' );
-	ok( dsc.configurable === false, 'Object.getOwnPropertyDescriptor(Math, "PI").configurable === false');	
+	ok( dsc.configurable === false, 'Object.getOwnPropertyDescriptor(Math, "PI").configurable === false');
+	
+	dsc = Object.getOwnPropertyDescriptor( {}, "non-exisiting" );
+	ok( dsc === void 0, 'Object.getOwnPropertyDescriptor( {}, "non-exisiting" ) === undefined' );
+	
+	raises( function(){
+		dsc = Object.getOwnPropertyDescriptor(123, 'valueOf');
+	}, TypeError, "Object.getOwnPropertyDescriptor(123, 'valueOf') should throw exception" );
 });
 
+
+
+test( "Object.defineProperty", function(){
+	ok( Object.defineProperty, "method existence veryfication" );
+	
+	var obj = {};
+	Object.defineProperty(obj, "test", {value: 5, writable: true, configurable: true, enumerable: true});
+	ok( obj.test === 5, "Property added using defineProperty" );
+	
+	obj.name = "DDR-ECMA5";
+	Object.defineProperty(obj, "name", {value: "ok"});
+	ok( obj.name === "ok", "Property value changed using defineProperty" );
+
+	raises( function(){
+		Object.defineProperty(obj, 'test', 'non-object');
+	}, TypeError, "Object.defineProperty(obj, 'test', 'non-object') should throw TypeError" );	
+	
+	raises( function(){
+		Object.defineProperty(123, 'test', {});
+	}, TypeError, "Object.defineProperty(123, 'test', {}) should throw TypeError" );	
+	
+	raises( function(){
+		Object.defineProperty(obj, 'test2', {value: 1, get: function(){}});
+	}, TypeError, "Object.defineProperty(obj, 'test2', {value: 1, get: function(){}}) should throw TypeError (not allowed to have getter and value at the same time)" );
+	
+	raises( function(){
+		Object.defineProperty(obj, 'test3', {value: 1, set: function(){}});
+	}, TypeError, "Object.defineProperty(obj, 'test2', {value: 1, set: function(){}}) should throw TypeError (not allowed to have setter and value at the same time)" );
+	
+	raises( function(){
+		Object.defineProperty(obj, 'test4', {writable: true, get: function(){}});
+	}, TypeError, "Object.defineProperty(obj, 'test2', {writable: false, set: function(){}}) should throw TypeError (not allowed to have getter and writable flag at the same time)" );
+	
+	raises( function(){
+		Object.defineProperty(obj, 'test5', { get: 123 });
+	}, TypeError, "Object.defineProperty(obj, 'test5', { get: 123 }) should throw TypeError (getter/setter must be a callable object)" );
+	
+	
+	// DDR_Ecma5 only
+	if( Object.defineProperty.DDRECMA5 ) {
+		raises( function(){
+			Object.defineProperty(obj, 'test6', {value: 1});
+		}, TypeError, "Object.defineProperty(obj, 'test6', {value: 1}) should throw TypeError because DDREcma5 won't be able to set flags to false" );
+		
+		raises( function(){
+			Object.defineProperty(obj, 'test7', {configurable: true, enumerable: true, get:function(){}, set:function(){}});
+		}, TypeError, "Object.defineProperty(obj, 'test7', {configurable: true, enumerable: true, get:function(){}, set:function(){}}) should throw TypeError because DDREcma5 doesn't support accessors" );		
+	}
+});
+
+
+test( "Object.defineProperties", 7, function(){
+	ok( Object.defineProperties, "method existence veryfication" );
+	
+	var obj = { y:1 };
+	Object.defineProperties(obj, {x:{value:5,writable: true, enumerable: true, configurable: true},
+		y:{value: 10}});
+	ok( obj.x === 5, "obj.x creation" );
+	ok( obj.y === 10, "obj.y value redefinition"  );
+	
+	raises( function(){
+		dsc = Object.defineProperties(obj, {x:{value:7}, z:{get:123}});
+	}, TypeError, "method trows error when one of property descriptors is wrong" );
+	
+	ok( obj.x === 5, "When there is a single wrong property descriptor not of the atributes in the object should change" );
+	
+	raises( function(){
+		Object.defineProperties(obj, 'non-object');
+	}, TypeError, "Object.defineProperties(obj, 'non-object') should throw TypeError" );	
+	
+	raises( function(){
+		Object.defineProperties(123, {});
+	}, TypeError, "Object.defineProperties(123, {}) should throw TypeError" );		
+});
 
 
 //-----------------------------------------------------------------
@@ -503,8 +584,11 @@ test( "Date.prototype.toJSON", function() {
 	// most of the browsers gives error here ("Invalid date") which is not right according to ECMAScript 5 Specification
 	ok( new Date(NaN).toJSON() === null, "new Data(NaN).toJSON() should be null" );
 	
-	// most of the browser won't allow to use other types than Date here
-	ok( new Date(0).toJSON.call('abc') === null, "new Date(0).toJSON.call('abc') should be null" ); 
+	// most of the browser won't allow to use other types than Date here, some of them even throw an exception
+	// but the ECMAScript 5 specification says such situation should return null
+	try {
+		ok( new Date(0).toJSON.call('abc') === null, "new Date(0).toJSON.call('abc') should be null" );
+	} catch(e){/*ignore*/}
 });
 
 

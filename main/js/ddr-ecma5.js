@@ -1,11 +1,11 @@
-/*  ddr-ECMA5 JavaScript library, version 1.2RC2
+/*  ddr-ECMA5 JavaScript library, version 1.2RC3
  *  (c) 2010 David de Rosier
  *
  *  Licensed under the MIT license.
  *  http://www.opensource.org/licenses/mit-license.php
  *
- *  Revision: 14
- *  Date: 14.07.2011
+ *  Revision: 16
+ *  Date: 15.07.2011
  */
 
 
@@ -22,7 +22,7 @@
 	 * the context.
 	 * ECMAScript 5 Reference: 15.3.4.5
 	 * @param ctx {object} method's context
-	 * @return {function} wrapped function
+	 * @returns {function} wrapped function
 	 * @example var flatFunction = obj.method.bind(obj);
 	 */
 	Function.prototype.bind || (Function.prototype.bind = function(ctx){
@@ -44,7 +44,7 @@
 	 * Returns an array of object's own property names.
 	 * ECMAScript 5 Reference: 15.2.3.14
 	 * @param obj {object} 
-	 * @return {Array} array of own property names
+	 * @returns {Array} array of own property names
 	 * @throws TypeError if the parameter is not an object
 	 * @example Object.keys({a:5}); // should return ["a"] 
 	 */	 
@@ -66,7 +66,7 @@
 	 * reference which won't work for the overriden constructor property
 	 * ECMAScript 5 Reference: 15.2.3.2
 	 * @param obj {object} 
-	 * @return {object} Object's prototype
+	 * @returns {object} Object's prototype
 	 * @example Object.getPrototypeOf([]) === Array.prototype;
 	 */
 	if( !Object.getPrototypeOf ) {
@@ -89,14 +89,19 @@
 	/**
 	 * Creates a new object with given prototype. The function creates a new constructor and assigns
 	 * its prototype to given parameter. Function returns an instance of such created object.
-	 * WARNING! The original ECMAScript 5 method takes an optional parameter - property descriptions.
-	 * Because property descriptions cannot be implemented with ECMAScript 3, this parameter will be skipped. 
+	 * 
+	 * WARNING! When function called with second parameter it internally invokes Object.defineProperties method.
+	 * The implementation of this method provided in this library is not 100% valid with ECMAScript 5 specification
+	 * due to some limitations in ECMASCript 3. So in consequence also Object.create suffers from
+	 * limited functionality. For more details see description of Object.defineProperties method.
+	 * 
 	 * ECMAScript 5 Reference: 15.2.3.5
 	 * @param {object} proto a prototype of new object
 	 * @param {object} [properties] property descriptions - UNUSED in this implementation!
 	 * @returns new object with given prototype
 	 * @throws {TypeError} when proto is not an object
 	 * @example var newMe = Object.create( {me: 'test'} );
+	 * @see Object#defineProperties
 	 */
 	Object.create || ( Object.create = (function(){
 
@@ -111,7 +116,11 @@
 				throw new TypeError( proto + " is not an object" );
 			
 			__TmpConstructor.prototype = proto;
-			return new __TmpConstructor();
+			var obj = new __TmpConstructor();
+			
+			properties && Object.defineProperties( obj, properties );
+			
+			return obj;
 		};
 	})());
 
@@ -119,7 +128,7 @@
 	/**
 	 * ECMAScript 5 Reference: 15.2.3.11
 	 * @param {object} 
-	 * @return {boolean} 
+	 * @returns {boolean} 
 	 */
 	Object.isSealed || ( Object.isSealed = function(obj){ 
 		if( !_isObject(obj) ) 
@@ -131,7 +140,7 @@
 	/**
 	 * ECMAScript 5 Reference: 15.2.3.12
 	 * @param {object} 
-	 * @return {boolean} 
+	 * @returns {boolean} 
 	 */	
 	Object.isFrozen || ( Object.isFrozen = function(obj){
 		if( !_isObject(obj) ) 
@@ -144,7 +153,7 @@
 	 * Checks whether the object structure can be extended.
 	 * ECMAScript 5 Reference: 15.2.3.13
 	 * @param {object} 
-	 * @return {boolean} 
+	 * @returns {boolean} 
 	 */
 	Object.isExtensible || ( Object.isExtensible = function(obj){ 
 		if( !_isObject(obj) ) 
@@ -195,8 +204,90 @@
 				configurable: configurable,
 				value: obj[pname]
 			};
-		}
+		};
 	})());	
+	
+	
+	// Object.defineProperty and Object.defineProperties implementation
+	(!Object.defineProperty || !Object.defineProperties) && (function(){
+			
+		/**
+		 * @private
+		 */
+		var __applyDefaults = function(desc, defaultValue, value) {
+			if(desc.hasOwnProperty("get") || desc.hasOwnProperty("set")) {
+				throw new TypeError( "Getters and setters are not supported by this ECMAScript engine" );
+			} else {
+				desc.writable = desc.hasOwnProperty('writable') ? desc.writable : defaultValue;
+				desc.value = desc.hasOwnProperty('value') ? desc.value : value;
+			}
+			
+			desc.enumerable = desc.hasOwnProperty('enumerable') ? desc.enumerable : defaultValue;
+			desc.configurable = desc.hasOwnProperty('configurable') ? desc.configurable : defaultValue;
+			
+			var t = null;
+			if( (!desc[t="configurable"]) || (!desc[t="enumerable"]) || (!desc[t="writable"]) ) {
+				throw new TypeError( "Property '".concat(t,"' cannot be set to false in this version of ECMAScript engine") );
+			}		
+
+			return desc;				
+		};
+		
+	
+		if( !Object.defineProperty ) {
+
+			/**
+			 * ECMAScript 5 Reference: 15.2.3.6
+			 */
+			Object.defineProperty = function(obj, property, descriptor){
+				if( !_isObject(obj) ) 
+					throw new TypeError( obj+" is not an object" );
+				
+				var pname = String(property);
+				var desc = __toPropertyDescriptor(descriptor);
+				desc = __applyDefaults( desc, obj.hasOwnProperty(pname), obj[pname] );
+				
+				obj[pname] = desc.value;
+				
+				return obj;
+			};
+			
+			Object.defineProperty.DDRECMA5 = true;
+		}
+		
+		
+		if( !Object.defineProperties ) {
+		
+			/**
+			 * ECMAScript 5 Reference: 15.2.3.6
+			 */
+			Object.defineProperties=function(obj, properties){
+				if( !_isObject(obj) ) 
+					throw new TypeError( obj+" is not an object" );
+				
+				var properties = Object( properties );
+				var descriptors = {};
+				for( var key in properties ) {
+					if( properties.hasOwnProperty(key) ){
+						var desc = __toPropertyDescriptor(properties[key]);
+						descriptors[key] = __applyDefaults( desc, obj.hasOwnProperty(key), obj[key] );
+					}
+				}
+				
+				// when there are no error in property descriptors we can apply changes to the object
+				for( key in descriptors ) {
+					if( properties.hasOwnProperty(key) ){
+						obj[key] = descriptors[key].value;
+					}
+				}
+				
+				return obj;
+			};
+		
+			Object.defineProperties.DDRECMA5 = true;
+		}
+
+	})();
 	
 	
 	//-----------------------------------------------------------------------
@@ -208,7 +299,7 @@
 	 * Method implements probably the fastest algorithm of JavaScript trim operation
 	 * (see http://blog.stevenlevithan.com/archives/faster-trim-javascript)
 	 * ECMAScript 5 Reference: 15.5.4.20
-	 * return {string} trimmed string
+	 * @returns {string} trimmed string
 	 */
 	String.prototype.trim || (String.prototype.trim = function(){
 		return this.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
@@ -223,7 +314,7 @@
 	 *  Tests if passed object is an Array
 	 *  @since 1.0.1, revision 9 (thanks to dudleyflanders)
 	 *  @param obj object to be tested
-	 *  @return {boolean} true if input parameter is an object false in any other case
+	 *  @returns {boolean} true if input parameter is an object false in any other case
 	 *  @example Array.isArray([]) === true;
 	 */
 	Array.isArray || (Array.isArray = function(obj) {
@@ -241,7 +332,7 @@
 	 * According to specification Array.prototype.indexOf.length is 1
 	 * @param searchElement - 
 	 * @param fromIndex {number} - start index (optional)
-	 * @return {number} index of found element or -1
+	 * @returns {number} index of found element or -1
 	 * @example ['a','b','c'].indexOf('b') === 1;
 	 */
 	$AP.indexOf || ($AP.indexOf = function(searchElement){
@@ -270,7 +361,7 @@
 	 * According to specification Array.prototype.lastIndexOf.length is 1
 	 * @param searchElement -
 	 * @param fromIndex {number} - start index (optional)
-	 * @return {number} index of found element or -1
+	 * @returns {number} index of found element or -1
 	 * @example ['a','b','c'].indexOf('b') === 1;
 	 */
 	$AP.lastIndexOf || ($AP.lastIndexOf = function(searchElement){
@@ -543,6 +634,64 @@
 			}
 		}	
 		return -1;
+	};
+	
+	/**
+	 * Implementation of inner ECMAScript 5 method ToPropertyDescriptor.
+	 * ECMAScript 5 reference: 8.10.5
+	 * @private
+	 * @param {object} obj preperty object
+	 * @return {object} property descriptor
+	 */
+	var __toPropertyDescriptor = function(obj){
+		if( !obj || typeof obj !== 'object' )
+			throw new TypeError( obj+" is not an object" );
+		
+		var desc = {};
+		obj.hasOwnProperty("enumerable") && ( desc.enumerable = !!obj.enumerable );
+		obj.hasOwnProperty("configurable") && ( desc.configurable = !!obj.configurable );
+		obj.hasOwnProperty("writable") && ( desc.writable = !!obj.writable );
+		obj.hasOwnProperty("value") && ( desc.value = obj.value );
+		
+		if( obj.hasOwnProperty("get") ) {
+			if( !__isCallable(obj.get) && typeof obj.get !== 'undefined' )
+				throw new TypeError( "Getter must be a callable object" );
+			desc.get = obj.get;
+		}
+		
+		if( obj.hasOwnProperty("set") ) {
+			if( !__isCallable(obj.set) && typeof obj.set !== 'undefined' )
+				throw new TypeError( "Setter must be a callable object" );
+			desc.set = obj.set;
+		}		
+		
+		if( (desc.hasOwnProperty("get") || desc.hasOwnProperty("set")) 
+				&& (desc.hasOwnProperty("writable") || desc.hasOwnProperty("value")) ) {
+			throw new TypeError("Invalid property. A property cannot both have accessors and be writable or have a value");
+		}
+
+		return desc;		
+	};
+	
+	
+	/**
+	 * Implementation of internal ECMAScript function IsCallable
+	 * ECMAScript 5 reference: 9.11
+	 * @param {object} obj An object to examine
+	 * @returns {boolean} true if object is callable false otherwise
+	 */
+	var __isCallable = function(obj){
+		if( typeof obj === 'function' )
+			return true;
+		if( typeof obj !== 'object' ) 
+			return false;
+		if( obj instanceof Function || obj instanceof RegExp )
+			return true;
+		try {
+			[].sort(obj);
+			return true;
+		} catch(ex){}
+		return false;
 	};
 
 })();
