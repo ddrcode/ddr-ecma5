@@ -7,11 +7,13 @@ ddr-ecma5 lets you to write ECMAScript 5 code and run it on older environments l
 
 ## Installation
 Just add it to your webpage and enjoy<br/> 
+
 ```html
 <script type="text/javascript" src="ddr-ecma5.js"></script>
 ```
 
 In Rhino/SpiderMonkey environments use `load` function:
+
 ```js
 load('ddr-ecma5.js');
 ```
