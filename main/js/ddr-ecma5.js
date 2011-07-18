@@ -1,15 +1,15 @@
-/*  ddr-ECMA5 JavaScript library, version 1.2RC3
+/*  ddr-ECMA5 JavaScript library, version 1.2
  *  (c) 2010 David de Rosier
  *
  *  Licensed under the MIT license.
  *  http://www.opensource.org/licenses/mit-license.php
  *
- *  Revision: 16
- *  Date: 15.07.2011
+ *  Revision: 18
+ *  Date: 18.07.2011
  */
 
 
-(function(){
+(function(global, undefined){
 
 	"use strict";
 
@@ -36,259 +36,6 @@
 		};
 	});
 
-	
-	//-----------------------------------------------------------------------
-	// Object extensions
-	
-	/**
-	 * Returns an array of object's own property names.
-	 * ECMAScript 5 Reference: 15.2.3.14
-	 * @param obj {object} 
-	 * @returns {Array} array of own property names
-	 * @throws TypeError if the parameter is not an object
-	 * @example Object.keys({a:5}); // should return ["a"] 
-	 */	 
-	Object.keys || (Object.keys = function(obj){
-		if( !_isObject(obj) ) 
-			throw new TypeError( obj + " is not an object" );
-		
-		var results = [];
-		for(var key in obj) {
-			obj.hasOwnProperty(key) && results.push(key);
-		}
-		return results;
-	});
-	
-	
-	/**
-	 * Returns a prototype of an object. In this implementation the method tries to
-	 * use __proto__ attribute (for Spider/Trace-Monkey and Rhino) or constructor.prototype
-	 * reference which won't work for the overriden constructor property
-	 * ECMAScript 5 Reference: 15.2.3.2
-	 * @param obj {object} 
-	 * @returns {object} Object's prototype
-	 * @example Object.getPrototypeOf([]) === Array.prototype;
-	 */
-	if( !Object.getPrototypeOf ) {
-		if( "".__proto__ ) {
-			Object.getPrototypeOf = function(obj) {
-				if( !_isObject(obj) ) 
-					throw new TypeError( obj + " is not an object" );
-				return obj.__proto__;
-			};
-		} else {
-			Object.getPrototypeOf = function(obj) {
-				if( !_isObject(obj) ) 
-					throw new TypeError( obj + " is not an object" );
-				return obj.constructor ? obj.constructor.prototype : null;
-			};
-		}
-	}
-	
-	
-	/**
-	 * Creates a new object with given prototype. The function creates a new constructor and assigns
-	 * its prototype to given parameter. Function returns an instance of such created object.
-	 * 
-	 * WARNING! When function called with second parameter it internally invokes Object.defineProperties method.
-	 * The implementation of this method provided in this library is not 100% valid with ECMAScript 5 specification
-	 * due to some limitations in ECMASCript 3. So in consequence also Object.create suffers from
-	 * limited functionality. For more details see description of Object.defineProperties method.
-	 * 
-	 * ECMAScript 5 Reference: 15.2.3.5
-	 * @param {object} proto a prototype of new object
-	 * @param {object} [properties] property descriptions - UNUSED in this implementation!
-	 * @returns new object with given prototype
-	 * @throws {TypeError} when proto is not an object
-	 * @example var newMe = Object.create( {me: 'test'} );
-	 * @see Object#defineProperties
-	 */
-	Object.create || ( Object.create = (function(){
-
-		/**
-		 * Moved outside the function to eliminate the closure memory effect
-		 * @private
-		 */
-		var __TmpConstructor = function(){};
-		
-		return function(proto, properties) {
-			if( !_isObject(proto) ) 
-				throw new TypeError( proto + " is not an object" );
-			
-			__TmpConstructor.prototype = proto;
-			var obj = new __TmpConstructor();
-			
-			properties && Object.defineProperties( obj, properties );
-			
-			return obj;
-		};
-	})());
-
-
-	/**
-	 * ECMAScript 5 Reference: 15.2.3.11
-	 * @param {object} 
-	 * @returns {boolean} 
-	 */
-	Object.isSealed || ( Object.isSealed = function(obj){ 
-		if( !_isObject(obj) ) 
-			throw new TypeError( obj+" is not an object" );
-		return false; 
-	});
-	
-	
-	/**
-	 * ECMAScript 5 Reference: 15.2.3.12
-	 * @param {object} 
-	 * @returns {boolean} 
-	 */	
-	Object.isFrozen || ( Object.isFrozen = function(obj){
-		if( !_isObject(obj) ) 
-			throw new TypeError( obj+" is not an object" );
-		return false; 		
-	});
-	
-	
-	/**
-	 * Checks whether the object structure can be extended.
-	 * ECMAScript 5 Reference: 15.2.3.13
-	 * @param {object} 
-	 * @returns {boolean} 
-	 */
-	Object.isExtensible || ( Object.isExtensible = function(obj){ 
-		if( !_isObject(obj) ) 
-			throw new TypeError( obj+" is not an object" );
-		return true; 
-	});	
-	
-	
-	/**
-	 * Returns property descriptor for property of given object
-	 * ECMAScript 5 Reference: 15.2.3.3
-	 * @since 1.2
-	 * @param {object} obj an object
-	 * @param {string} pname property name to test
-	 * @returns {object} property descriptor or undefined
-	 * @throws {TypeError} when obj is null or not an object
-	 * @example Object.getOwnPropertyDescriptor(Array.prototype, "length");
-	 */
-	Object.getOwnPropertyDescriptor || ( Object.getOwnPropertyDescriptor = (function(){
-		
-		var __NUMBER_CONSTS = ['MAX_VALUE', 'MIN_VALUE','NaN','POSITIVE_INFINITY','NEGATIVE_INFINITY'],
-			__MATH_CONSTS = ['PI','E','LN2','LOG2E','LOG10E','SQRT1_2','SQRT2'];
-		
-		return function(obj, pname){
-			if( !_isObject(obj) ) 
-				throw new TypeError( obj+" is not an object" );
-			
-			if( !(pname in obj) )
-				return;
-			
-			var editable = true,
-				configurable = true;
-			
-			// recognize the only cases when ECMAScript 3 protects properties
-			if( (obj===Number && __NUMBER_CONSTS.indexOf(pname)>=0) 
-					|| (obj===Math && __MATH_CONSTS.indexOf(pname)>=0) 
-					|| (pname=='length' && (obj===String.prototype || obj instanceof String 
-							|| obj===Function.prototype || obj instanceof Function)) ) {
-				editable = false;
-				configurable = false;
-			} else if( pname=='length' && (obj===Array.prototype || Array.isArray(obj)) ) {
-				configurable = false;
-			} 
-			
-			return {
-				writable: editable,
-				enumerable: obj.propertyIsEnumerable ? obj.propertyIsEnumerable(pname) : true,
-				configurable: configurable,
-				value: obj[pname]
-			};
-		};
-	})());	
-	
-	
-	// Object.defineProperty and Object.defineProperties implementation
-	(!Object.defineProperty || !Object.defineProperties) && (function(){
-			
-		/**
-		 * @private
-		 */
-		var __applyDefaults = function(desc, defaultValue, value) {
-			if(desc.hasOwnProperty("get") || desc.hasOwnProperty("set")) {
-				throw new TypeError( "Getters and setters are not supported by this ECMAScript engine" );
-			} else {
-				desc.writable = desc.hasOwnProperty('writable') ? desc.writable : defaultValue;
-				desc.value = desc.hasOwnProperty('value') ? desc.value : value;
-			}
-			
-			desc.enumerable = desc.hasOwnProperty('enumerable') ? desc.enumerable : defaultValue;
-			desc.configurable = desc.hasOwnProperty('configurable') ? desc.configurable : defaultValue;
-			
-			var t = null;
-			if( (!desc[t="configurable"]) || (!desc[t="enumerable"]) || (!desc[t="writable"]) ) {
-				throw new TypeError( "Property '".concat(t,"' cannot be set to false in this version of ECMAScript engine") );
-			}		
-
-			return desc;				
-		};
-		
-	
-		if( !Object.defineProperty ) {
-
-			/**
-			 * ECMAScript 5 Reference: 15.2.3.6
-			 */
-			Object.defineProperty = function(obj, property, descriptor){
-				if( !_isObject(obj) ) 
-					throw new TypeError( obj+" is not an object" );
-				
-				var pname = String(property);
-				var desc = __toPropertyDescriptor(descriptor);
-				desc = __applyDefaults( desc, obj.hasOwnProperty(pname), obj[pname] );
-				
-				obj[pname] = desc.value;
-				
-				return obj;
-			};
-			
-			Object.defineProperty.DDRECMA5 = true;
-		}
-		
-		
-		if( !Object.defineProperties ) {
-		
-			/**
-			 * ECMAScript 5 Reference: 15.2.3.6
-			 */
-			Object.defineProperties=function(obj, properties){
-				if( !_isObject(obj) ) 
-					throw new TypeError( obj+" is not an object" );
-				
-				var properties = Object( properties );
-				var descriptors = {};
-				for( var key in properties ) {
-					if( properties.hasOwnProperty(key) ){
-						var desc = __toPropertyDescriptor(properties[key]);
-						descriptors[key] = __applyDefaults( desc, obj.hasOwnProperty(key), obj[key] );
-					}
-				}
-				
-				// when there are no error in property descriptors we can apply changes to the object
-				for( key in descriptors ) {
-					if( properties.hasOwnProperty(key) ){
-						obj[key] = descriptors[key].value;
-					}
-				}
-				
-				return obj;
-			};
-		
-			Object.defineProperties.DDRECMA5 = true;
-		}
-
-	})();
-	
 	
 	//-----------------------------------------------------------------------
 	// String extensions
@@ -605,6 +352,385 @@
 	
 	
 	//-----------------------------------------------------------------------
+	// Object extensions
+	
+	/**
+	 * Returns an array of object's own property names.
+	 * ECMAScript 5 Reference: 15.2.3.14
+	 * @param obj {object} 
+	 * @returns {Array} array of own property names
+	 * @throws TypeError if the parameter is not an object
+	 * @example Object.keys({a:5}); // should return ["a"] 
+	 */	 
+	Object.keys || (Object.keys = function(obj){
+		if( !_isObject(obj) ) 
+			throw new TypeError( obj + " is not an object" );
+		
+		var results = [];
+		for(var key in obj) {
+			obj.hasOwnProperty(key) && results.push(key);
+		}
+		return results;
+	});
+	
+	
+	/**
+	 * Returns a prototype of an object. In this implementation the method tries to
+	 * use __proto__ attribute (for Spider/Trace-Monkey and Rhino) or constructor.prototype
+	 * reference which won't work for the overriden constructor property
+	 * ECMAScript 5 Reference: 15.2.3.2
+	 * @param obj {object} 
+	 * @returns {object} Object's prototype
+	 * @example Object.getPrototypeOf([]) === Array.prototype;
+	 */
+	if( !Object.getPrototypeOf ) {
+		if( "".__proto__ ) {
+			Object.getPrototypeOf = function(obj) {
+				if( !_isObject(obj) ) 
+					throw new TypeError( obj + " is not an object" );
+				return obj.__proto__;
+			};
+		} else {
+			Object.getPrototypeOf = function(obj) {
+				if( !_isObject(obj) ) 
+					throw new TypeError( obj + " is not an object" );
+				return obj.constructor ? obj.constructor.prototype : null;
+			};
+		}
+	}
+	
+	
+	/**
+	 * Creates a new object with given prototype. The function creates a new constructor and assigns
+	 * its prototype to given parameter. Function returns an instance of such created object.
+	 * 
+	 * WARNING! When function called with second parameter it internally invokes Object.defineProperties method.
+	 * The implementation of this method provided in this library is not 100% valid with ECMAScript 5 specification
+	 * due to some limitations in ECMASCript 3. So in consequence also Object.create suffers from
+	 * limited functionality. For more details see description of Object.defineProperties method.
+	 * 
+	 * ECMAScript 5 Reference: 15.2.3.5
+	 * @param {object} proto a prototype of new object
+	 * @param {object} [properties] property descriptions - UNUSED in this implementation!
+	 * @returns new object with given prototype
+	 * @throws {TypeError} when proto is not an object
+	 * @example var newMe = Object.create( {me: 'test'} );
+	 * @see Object#defineProperties
+	 */
+	Object.create || ( Object.create = (function(){
+
+		/**
+		 * Moved outside the function to eliminate the closure memory effect
+		 * @private
+		 */
+		var __TmpConstructor = function(){};
+		
+		return function(proto, properties) {
+			if( !_isObject(proto) ) 
+				throw new TypeError( proto + " is not an object" );
+			
+			__TmpConstructor.prototype = proto;
+			var obj = new __TmpConstructor();
+			
+			properties && Object.defineProperties( obj, properties );
+			
+			return obj;
+		};
+	})());
+
+
+	/**
+	 * ECMAScript 5 Reference: 15.2.3.11
+	 * @param {object} 
+	 * @returns {boolean} 
+	 */
+	Object.isSealed || ( Object.isSealed = function(obj){ 
+		if( !_isObject(obj) ) 
+			throw new TypeError( obj+" is not an object" );
+		return false; 
+	});
+	
+	
+	/**
+	 * ECMAScript 5 Reference: 15.2.3.12
+	 * @param {object} 
+	 * @returns {boolean} 
+	 */	
+	Object.isFrozen || ( Object.isFrozen = function(obj){
+		if( !_isObject(obj) ) 
+			throw new TypeError( obj+" is not an object" );
+		return false; 		
+	});
+	
+	
+	/**
+	 * Checks whether the object structure can be extended.
+	 * ECMAScript 5 Reference: 15.2.3.13
+	 * @param {object} 
+	 * @returns {boolean} 
+	 */
+	Object.isExtensible || ( Object.isExtensible = function(obj){ 
+		if( !_isObject(obj) ) 
+			throw new TypeError( obj+" is not an object" );
+		return true; 
+	});	
+	
+	
+	/**
+	 * Returns property descriptor for property of given object
+	 * ECMAScript 5 Reference: 15.2.3.3
+	 * @since 1.2
+	 * @param {object} obj an object
+	 * @param {string} pname property name to test
+	 * @returns {object} property descriptor or undefined
+	 * @throws {TypeError} when obj is null or not an object
+	 * @example Object.getOwnPropertyDescriptor(Array.prototype, "length");
+	 */
+	Object.getOwnPropertyDescriptor || ( Object.getOwnPropertyDescriptor = (function(){
+		
+		var __NUMBER_CONSTS = ['MAX_VALUE', 'MIN_VALUE','NaN','POSITIVE_INFINITY','NEGATIVE_INFINITY'],
+			__MATH_CONSTS = ['PI','E','LN2','LOG2E','LOG10E','SQRT1_2','SQRT2'];
+		
+		return function(obj, pname){
+			if( !_isObject(obj) ) 
+				throw new TypeError( obj+" is not an object" );
+			
+			if( !(pname in obj) )
+				return;
+			
+			var editable = true,
+				configurable = true;
+			
+			// recognize the only cases when ECMAScript 3 protects properties
+			if( (obj===Number && __NUMBER_CONSTS.indexOf(pname)>=0) 
+					|| (obj===Math && __MATH_CONSTS.indexOf(pname)>=0) 
+					|| (pname=='length' && (obj===String.prototype || obj instanceof String 
+							|| obj===Function.prototype || obj instanceof Function)) ) {
+				editable = false;
+				configurable = false;
+			} else if( pname=='length' && (obj===Array.prototype || Array.isArray(obj)) ) {
+				configurable = false;
+			} 
+			
+			return {
+				writable: editable,
+				enumerable: obj.propertyIsEnumerable ? obj.propertyIsEnumerable(pname) : true,
+				configurable: configurable,
+				value: obj[pname]
+			};
+		};
+	})());	
+	
+	
+	// Object.defineProperty and Object.defineProperties implementation
+	(!Object.defineProperty || !Object.defineProperties) && (function(){
+			
+		/**
+		 * @private
+		 */
+		var __applyDefaults = function(desc, defaultValue, value) {
+			if(desc.hasOwnProperty("get") || desc.hasOwnProperty("set")) {
+				throw new TypeError( "Getters and setters are not supported by this ECMAScript engine" );
+			} else {
+				desc.writable = desc.hasOwnProperty('writable') ? desc.writable : defaultValue;
+				desc.value = desc.hasOwnProperty('value') ? desc.value : value;
+			}
+			
+			desc.enumerable = desc.hasOwnProperty('enumerable') ? desc.enumerable : defaultValue;
+			desc.configurable = desc.hasOwnProperty('configurable') ? desc.configurable : defaultValue;
+			
+			var t = null;
+			if( (!desc[t="configurable"]) || (!desc[t="enumerable"]) || (!desc[t="writable"]) ) {
+				throw new TypeError( "Property '".concat(t,"' cannot be set to false in this version of ECMAScript engine") );
+			}		
+
+			return desc;				
+		};
+		
+	
+		if( !Object.defineProperty ) {
+
+			/**
+			 * ECMAScript 5 Reference: 15.2.3.6
+			 */
+			Object.defineProperty = function(obj, property, descriptor){
+				if( !_isObject(obj) ) 
+					throw new TypeError( obj+" is not an object" );
+				
+				var pname = String(property);
+				var desc = __toPropertyDescriptor(descriptor);
+				desc = __applyDefaults( desc, obj.hasOwnProperty(pname), obj[pname] );
+				
+				obj[pname] = desc.value;
+				
+				return obj;
+			};
+			
+			Object.defineProperty.DDRECMA5 = true;
+		}
+		
+		
+		if( !Object.defineProperties ) {
+		
+			/**
+			 * ECMAScript 5 Reference: 15.2.3.6
+			 */
+			Object.defineProperties=function(obj, properties){
+				if( !_isObject(obj) ) 
+					throw new TypeError( obj+" is not an object" );
+				
+				var properties = Object( properties );
+				var descriptors = {};
+				for( var key in properties ) {
+					if( properties.hasOwnProperty(key) ){
+						var desc = __toPropertyDescriptor(properties[key]);
+						descriptors[key] = __applyDefaults( desc, obj.hasOwnProperty(key), obj[key] );
+					}
+				}
+				
+				// when there are no error in property descriptors we can apply changes to the object
+				for( key in descriptors ) {
+					if( properties.hasOwnProperty(key) ){
+						obj[key] = descriptors[key].value;
+					}
+				}
+				
+				return obj;
+			};
+		
+			Object.defineProperties.DDRECMA5 = true;
+		}
+
+	})();
+	
+	
+	!Object.getOwnPropertyNames && (function(){
+		
+		var __notEnumerableProperties = (function(){
+			var props = [
+	             {
+	            	 object: Object,
+	            	 keys: ['getOwnPropertyNames', 'seal', 'create', 'isFrozen', 'keys', 'isExtensible', 
+	            	        'getOwnPropertyDescriptor', 'preventExtensions', 'getPrototypeOf', 'defineProperty', 'isSealed', 
+	            	        'defineProperties', 'freeze']
+	             },{
+	            	 object: Object.prototype,
+	            	 keys: ['toString', '__lookupGetter__', '__defineGetter__', 'toLocaleString', 'hasOwnProperty', 'valueOf', '__defineSetter__', 
+	            	        'propertyIsEnumerable', 'isPrototypeOf', '__lookupSetter__']
+	             },{
+	            	 object: Function.prototype,
+	            	 keys: ['bind', 'arguments', 'toString', 'length', 'call', 'name', 'apply', 'caller']
+	             },{
+	            	 object: Number,
+	            	 keys: ['NaN', 'NEGATIVE_INFINITY', 'POSITIVE_INFINITY', 'MAX_VALUE', 'MIN_VALUE']
+	             },{
+	            	 object: Number.prototype,
+	            	 keys: ['toExponential', 'toString', 'toLocaleString', 'toPrecision', 'valueOf', 'toFixed']
+	             },{
+	            	 object: String,
+	            	 keys: ['fromCharCode']
+	             },{
+	            	 object: String.prototype,
+	            	 keys: ['length', 'concat', 'localeCompare', 'substring', 'italics', 'charCodeAt', 'strike', 'indexOf', 
+	            	        'toLowerCase', 'trimRight', 'toString', 'toLocaleLowerCase', 'replace', 'toUpperCase', 'fontsize', 'trim', 'split', 
+	            	        'substr', 'sub', 'charAt', 'blink', 'lastIndexOf', 'sup', 'fontcolor', 'valueOf', 'link', 'bold', 'anchor', 'trimLeft', 
+	            	        'small', 'search', 'fixed', 'big', 'match', 'toLocaleUpperCase', 'slice']
+	             },{
+	            	 object: Boolean.prototype,
+	            	 keys: ['toString', 'valueOf']
+	             },{
+	            	 object: Date,
+	            	 keys: ['now', 'UTC', 'parse']
+	             },{
+	            	 object: Date.prototype,
+	            	 keys: ['toUTCString', 'setMinutes', 'setUTCMonth', 'getMilliseconds', 'getTime', 'getMinutes', 'getUTCHours', 
+	            	        'toString', 'setUTCFullYear', 'setMonth', 'getUTCMinutes', 'getUTCDate', 'setSeconds', 'toLocaleDateString', 'getMonth', 
+	            	        'toTimeString', 'toLocaleTimeString', 'setUTCMilliseconds', 'setYear', 'getUTCFullYear', 'getFullYear', 'getTimezoneOffset', 
+	            	        'setDate', 'getUTCMonth', 'getHours', 'toLocaleString', 'toISOString', 'toDateString', 'getUTCSeconds', 'valueOf', 
+	            	        'setUTCMinutes', 'getUTCDay', 'toJSON', 'setUTCDate', 'setUTCSeconds', 'getYear', 'getUTCMilliseconds', 'getDay', 
+	            	        'setFullYear', 'setMilliseconds', 'setTime', 'setHours', 'getSeconds', 'toGMTString', 'getDate', 'setUTCHours']
+	             },{
+	            	 object: RegExp,
+	            	 keys: 	['$*', '$`', '$input', '$+', '$&', "$'", '$_']
+	             },{
+	            	 object: RegExp.prototype,
+	            	 keys: ['toString', 'exec', 'compile', 'test']
+	             },{
+	            	 object: Error.prototype,
+	            	 keys: ['toString']
+	             },{
+	            	 object: Math,
+	            	 keys: ['LN10', 'PI', 'E', 'LOG10E', 'SQRT2', 'LOG2E', 'SQRT1_2', 'LN2', 'cos', 'pow', 'log', 'tan', 'sqrt', 'ceil', 'asin', 
+	            	        'abs', 'max', 'exp', 'atan2', 'random', 'round', 'floor', 'acos', 'atan', 'min', 'sin']
+	             },{
+	            	 object: global,
+	            	 keys: ['TypeError', 'decodeURI', 'parseFloat', 'Number', 'URIError', 'encodeURIComponent', 'RangeError', 'ReferenceError', 
+	            	        'RegExp', 'Array', 'isNaN', 'Date', 'Infinity', 'Boolean', 'Error', 'NaN', 'execScript', 'String', 'Function', 
+	            	        'Math', 'undefined', 'encodeURI', 'escape', 'unescape', 'decodeURIComponent', 'EvalError', 'SyntaxError', 'Object', 
+	            	        'eval', 'parseInt', 'JSON', 'isFinite']
+	             },{
+	            	 test: function(obj){ return typeof JSON !== 'undefined' && obj === JSON; },
+	            	 keys: ['stringify', 'parse']
+	             },{
+	            	 test: function(obj){ return Array.isArray(obj) || obj instanceof String; },
+	            	 keys: ['length']
+	             },{
+	            	 test: function(obj){ return obj instanceof RegExp },
+	            	 testValue: new RegExp('.+'),
+	            	 keys: ['lastIndex', 'multiline', 'global', 'source', 'ignoreCase']
+	             },{
+	            	 test: function(obj){ return typeof obj === 'function' && obj.apply && obj.call; },
+	            	 testValue: function(a,b,c){},
+	            	 keys: ['arguments', 'length', 'name', 'prototype', 'caller']
+	             }
+			];
+			
+			for( var i=0, ilen=props.length; i < ilen; ++i){
+				if( props[i].object ) {
+					if( typeof props[i].object === 'function' ){
+						props[i].keys.push('arguments', 'length', 'name', 'prototype', 'caller');
+					} else if( typeof props[i].object === 'object' && props[i].object !== Math && props[i].object !== global ) {
+						props[i].keys.push('constructor');
+					}
+					for( var j=props[i].keys.length-1; j>=0; --j ) {
+						if( !(props[i].keys[j] in props[i].object) || props[i].object.propertyIsEnumerable(props[i].keys[j]) ) {
+							props[i].keys.splice(j,1);
+						}
+					}
+				} else if( props[i].test && props[i].testValue && props[i].test(props[i].testValue) ) {
+					for( var j=props[i].keys.length-1; j>=0; --j ) {
+						if( !(props[i].keys[j] in props[i].testValue) || props[i].testValue.propertyIsEnumerable(props[i].keys[j]) ) {
+							props[i].keys.splice(j,1);
+						}
+					}
+					delete props[i].testValue;
+				}
+			}
+			
+			return props;
+		})();
+		
+		var __len = __notEnumerableProperties.length;
+		
+		//console.log(__notEnumerableProperties);
+		
+		Object.getOwnPropertyNames = function(obj){
+			var keys = Object.keys(obj);
+			for(var i=0; i < __len; ++i) {
+				if( (__notEnumerableProperties[i].object && __notEnumerableProperties[i].object===obj) 
+						|| (__notEnumerableProperties[i].test && __notEnumerableProperties[i].test(obj)) ) {
+					keys = keys.concat( __notEnumerableProperties[i].keys );
+					break;
+				}
+			}
+			return keys;
+		};
+		
+		
+	})();
+	
+	
+	//-----------------------------------------------------------------------
 	// Private Utils
 
 	/**
@@ -694,4 +820,4 @@
 		return false;
 	};
 
-})();
+})(this);

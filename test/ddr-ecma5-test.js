@@ -86,6 +86,21 @@ var utils = {
 		
 		ok( Array.prototype[mth].length === 1, "Method length should be 1" );
 		ok( utils.assertError(function(){ arr2[mth](123); }), mth+" with non-function argument shoudl return an error" );
+	},
+	
+	/**
+	 * Returns true if array contains a value; false otherwise
+	 * @param {Array} arr an array
+	 * @param {any} val a value
+	 * @returns {boolean}
+	 */
+	contains: function(arr, val){
+		for(var i=0, len=arr.length; i < len; ++i){
+			if( arr[i] === val ) {
+				return true;
+			}
+		}
+		return false;
 	}
 };
 
@@ -305,6 +320,44 @@ test( "Object.defineProperties", 7, function(){
 	raises( function(){
 		Object.defineProperties(123, {});
 	}, TypeError, "Object.defineProperties(123, {}) should throw TypeError" );		
+});
+
+
+test( "Object.getOwnPropertyNames", 16, function(){
+	ok( Object.getOwnPropertyNames, "method existence veryfication" );
+	
+	raises( function(){
+		Object.getOwnPropertyNames('non-object');
+	}, TypeError, "Object.getOwnPropertyNames('non-object') should throw TypeError" );
+	
+	var names = Object.getOwnPropertyNames([]);
+	ok( utils.contains(names, "length"), "Object.getOwnPropertyNames([ ]) must contain a 'length' attribute" );
+	
+	names = Object.getOwnPropertyNames(new String('abc'));
+	ok( utils.contains(names, "length"), "Object.getOwnPropertyNames(new String('abc')) must contain a 'length' attribute" );
+	ok( utils.contains(names, "1"), "Object.getOwnPropertyNames(new String('abc')) must contain a '1' attribute" );
+	
+	names = Object.getOwnPropertyNames(Math);
+	ok( utils.contains(names, "PI"), "Object.getOwnPropertyNames(Math) must contain a 'PI' attribute" );
+	ok( utils.contains(names, "cos"), "Object.getOwnPropertyNames(Math) must contain a 'cos' attribute" );
+	ok( !utils.contains(names, "constructor"), "Object.getOwnPropertyNames(Math) must not contain a 'constructor' attribute" );
+	
+	names = Object.getOwnPropertyNames(Object);
+	ok( utils.contains(names, "prototype"), "Object.getOwnPropertyNames(Object) must contain a 'prototype' attribute" );
+	ok( utils.contains(names, "create"), "Object.getOwnPropertyNames(Object) must contain a 'create' attribute" );
+	
+	names = Object.getOwnPropertyNames(Date.prototype);
+	ok( utils.contains(names, "constructor"), "Object.getOwnPropertyNames(Date.prototype) must contain a 'constructor' attribute" );
+	ok( utils.contains(names, "setTime"), "Object.getOwnPropertyNames(Date.prototype) must contain a 'setTime' attribute" );	
+	
+	names = Object.getOwnPropertyNames(utils.global);
+	ok( utils.contains(names, "undefined"), "Object.getOwnPropertyNames(global) must contain a 'undefined' attribute" );
+	ok( utils.contains(names, "parseInt"), "Object.getOwnPropertyNames(global) must contain a 'parseInt' attribute" );
+	
+	names = Object.getOwnPropertyNames(function(){});
+	ok( utils.contains(names, "prototype"), "Object.getOwnPropertyNames(function(){}) must contain a 'prototype' attribute" );
+	ok( utils.contains(names, "length"), "Object.getOwnPropertyNames(function(){}) must contain a 'length' attribute" );
+	
 });
 
 
