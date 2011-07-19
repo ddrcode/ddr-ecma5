@@ -140,6 +140,8 @@ test( "Object.keys", function(){
 	ok( !utils.assertError(function(){ Object.keys(new Number(5));}), "number object" );
 	ok( utils.assertError(function(){ Object.keys();}), "no arguments" );
 	ok( !utils.assertError(function(){ Object.keys(function(){});}), "function" );
+	ok( utils.contains(Object.keys(new String("abc")), "1"), "String");
+	
 } );
 
 
@@ -314,8 +316,8 @@ test( "Object.defineProperties", 7, function(){
 	ok( obj.x === 5, "When there is a single wrong property descriptor not of the atributes in the object should change" );
 	
 	raises( function(){
-		Object.defineProperties(obj, 'non-object');
-	}, TypeError, "Object.defineProperties(obj, 'non-object') should throw TypeError" );	
+		Object.defineProperties(obj, {x:'abc'});
+	}, TypeError, "Object.defineProperties(obj, {x:'abc'}) should throw TypeError" );	
 	
 	raises( function(){
 		Object.defineProperties(123, {});

@@ -23,9 +23,24 @@ test( "ECMAScript 5 - Function extensions", function(){
 });
 
 
+test( "ECMAScript 5 - String extensions", function(){
+	var accessByIndex = (function(){
+		var str = "abc";
+		try {
+			var x = str[1];
+			return x === 'b';
+		} catch(ex) {
+			return false;
+		}
+	})();
+	ok( accessByIndex, "Accessing character in a string with [] operator" );
+});
+
+
 test( "ECMAScript 5 - String.ptototype extensions", function(){
 	ok( String.prototype.trim, "String.prototype.trim" );
 });
+
 
 test( "ECMAScript 5 - Array extensions", function(){
 	ok( Array.isArray, "Array.isArray" );

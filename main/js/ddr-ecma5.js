@@ -12,6 +12,17 @@
 (function(global, undefined){
 
 	"use strict";
+	
+	
+	/**
+	 * Checks features of the JavaScript engine 
+	 * @private
+	 */
+	var __features = {
+			STRING_INDEX_ENUMERABLE: "abc".propertyIsEnumerable("1"),
+			ACCESSORS: Object.prototype.__defineGetter__ && Object.prototype.__defineSetter__,
+			DOM: typeof window === 'object' && typeof document === 'object'
+		};
 
 	//-----------------------------------------------------------------------
 	// Function.prototype extensions
@@ -134,7 +145,17 @@
 	
 
 	/**
+	 * If given callback returns true for all elements of the array, the method
+	 * itself returns true as well; false otherwise. 
 	 * ECMAScript 5 Reference: 15.4.4.16
+	 * @param {function} callback a callback
+	 * @returns {boolean} true when callback returns true for all elements of 
+	 * 			the array; false otherwise 
+	 * @throws {TypeError} when callback is not callable object
+	 * @see Array.prototype.some
+	 * @example var allEven = array.every(function(el){
+	 * 				return !(el & 1);
+	 * 			});
 	 */
 	$AP.every || ($AP.every = function(callback){
 		if( typeof callback !== 'function' )
@@ -153,7 +174,15 @@
 	
 	
 	/**
+	 * When callback returns true for at least one element of the array, then
+	 * the Array.prototype.some method returns true as well; false otherwise.
 	 * ECMAScript 5 Reference: 15.4.4.17
+	 * @param {function} callback a callback
+	 * @returns {boolean} true when the callback returns true for at least one
+	 * 			array element
+	 * @throws {TypeError} when callback is not callable object
+	 * @see Array.prototype.every
+	 * @example var containsNull = array.some(function(el){ return el===null });
 	 */
 	$AP.some || ($AP.some = function(callback){
 		if( typeof callback !== 'function' )
@@ -172,7 +201,11 @@
 	
 
 	/**
+	 * Invokes given callback function for each element of an array.
 	 * ECMAScript 5 Reference: 15.4.4.18
+	 * @param {function} callback a callback
+	 * @throws {TypeError} when callback is not callable object
+	 * @example [1,2,3].forEach(function(el){ console.log(el); });
 	 */
 	$AP.forEach || ($AP.forEach = function(callback){
 		if( typeof callback !== 'function' )
@@ -188,7 +221,14 @@
 
 
 	/**
+	 * Invokes the callback for each element of an array and return the
+	 * array of callback results. The result array has the same length as 
+	 * input array.  
 	 * ECMAScript 5 Reference: 15.4.4.19
+	 * @param {function} callback a callback
+	 * @returns {Array} array of callback results
+	 * @throws {TypeError} when callback is not a callable object
+	 * @example var squares = [1,2,3].map(function(n){return n*n;});
 	 */
 	$AP.map || ($AP.map = function(callback){
 		if( typeof callback !== 'function' )
@@ -208,7 +248,13 @@
 	
 	
 	/**
+	 * Invokes callback for each element of an array (starting from first one)
+	 * and returns array of those elements for which the callback returned true.
 	 * ECMAScript 5 Reference: 15.4.4.20
+	 * @param {function} callback a callback
+	 * @return {Array} an array of results
+	 * @throws {TypeError} when callback is not callable object
+	 * @example var odds = [1,2,3,4].filter(function(n){return n & 1; });
 	 */
 	$AP.filter || ($AP.filter = function(callback){
 		if( typeof callback !== 'function' )
@@ -228,7 +274,17 @@
 	
 	
 	/**
+	 * Reduces an array to a single value. The callback is executed for each
+	 * element of an array starting from the first one. First argument of the
+	 * callback takes the result of previous callback invocation. For the first 
+	 * invocation either first element of an array is taken or the last (optional)
+	 * argument of the reduce method.
 	 * ECMAScript 5 Reference: 15.4.4.21
+	 * @param {function} callback a callback object
+	 * @returns {any} value of reduce algorithm; single value
+	 * @throws {TypeError} when callback is not a callable object
+	 * @see Array.prototype.reduceRight
+	 * @example var sum=[1,2,3].reduce(function(s,v){return s+v;}); 
 	 */
 	$AP.reduce || ($AP.reduce = function(callback){
 		if( typeof callback !== 'function' )
@@ -257,12 +313,13 @@
 	
 	
 	/**
-	 * Works like Array.prototype.reduce, but starts from the end of an array
+	 * Works like Array.prototype.reduce, but starts from the end of an array.
+	 * ECMAScript 5 Reference: 15.4.4.22
 	 * @param {callable} callback function
 	 * @returns {any} value of reduce; single value
+	 * @throws {TypeError} when callback is not a callable object
 	 * @see Array.prototype.reduce
 	 * @example [10,20,30].reduceRight(function(a,b){return a-b;}) === 0
-	 * ECMAScript 5 Reference: 15.4.4.22
 	 */
 	$AP.reduceRight || ($AP.reduceRight = function(callback){
 		if( typeof callback !== 'function' )
@@ -302,6 +359,7 @@
 	
 	/**
 	 * Numeric representation of current time (in milliseconds)
+	 * @returns {number} 
 	 * @example var timestamp = Date.now();
 	 * ECMAScript 5 Reference: 15.9.4.4
 	 */
@@ -312,6 +370,7 @@
 	
 	/**
 	 * ECMAScript 5 Reference: 15.9.5.43
+	 * @returns {string}
 	 */
 	Date.prototype.toISOString || (Date.prototype.toISOString = (function(){
 		
@@ -354,25 +413,6 @@
 	//-----------------------------------------------------------------------
 	// Object extensions
 	
-	/**
-	 * Returns an array of object's own property names.
-	 * ECMAScript 5 Reference: 15.2.3.14
-	 * @param obj {object} 
-	 * @returns {Array} array of own property names
-	 * @throws TypeError if the parameter is not an object
-	 * @example Object.keys({a:5}); // should return ["a"] 
-	 */	 
-	Object.keys || (Object.keys = function(obj){
-		if( !_isObject(obj) ) 
-			throw new TypeError( obj + " is not an object" );
-		
-		var results = [];
-		for(var key in obj) {
-			obj.hasOwnProperty(key) && results.push(key);
-		}
-		return results;
-	});
-	
 	
 	/**
 	 * Returns a prototype of an object. In this implementation the method tries to
@@ -401,8 +441,8 @@
 	
 	
 	/**
-	 * Creates a new object with given prototype. The function creates a new constructor and assigns
-	 * its prototype to given parameter. Function returns an instance of such created object.
+	 * Creates a new object with given prototype. The constructor of new object will point to its
+	 * prototype constructor. 
 	 * 
 	 * WARNING! When function called with second parameter it internally invokes Object.defineProperties method.
 	 * The implementation of this method provided in this library is not 100% valid with ECMAScript 5 specification
@@ -440,9 +480,13 @@
 
 
 	/**
+	 * Checks whather the object structure is sealed with Object.seal or Object.freeze
+	 * methods. Because the implementation of these methods is impossible in ECMAScript 3,
+	 * this method always returns false.
 	 * ECMAScript 5 Reference: 15.2.3.11
-	 * @param {object} 
-	 * @returns {boolean} 
+	 * @param {object} obj an object to examine
+	 * @returns {boolean} always false
+	 * @throws {TypeError} when obj is not an object
 	 */
 	Object.isSealed || ( Object.isSealed = function(obj){ 
 		if( !_isObject(obj) ) 
@@ -452,9 +496,13 @@
 	
 	
 	/**
+	 * Checks whether the object have been frozen with Object.freeze method.
+	 * Because the implementation of Object.freeze is impossible with ECMAScript 3 features,
+	 * the method always returns false.
 	 * ECMAScript 5 Reference: 15.2.3.12
-	 * @param {object} 
-	 * @returns {boolean} 
+	 * @param {object} obj an object to examine
+	 * @returns {boolean} always false
+	 * @throws {TypeError} when obj is not an object
 	 */	
 	Object.isFrozen || ( Object.isFrozen = function(obj){
 		if( !_isObject(obj) ) 
@@ -464,10 +512,14 @@
 	
 	
 	/**
-	 * Checks whether the object structure can be extended.
+	 * Checks whether the object structure can be extended. It returns false only when the object has
+	 * been protected by Object.preventExtensions, Object.seal or Object.freeze methods. 
+	 * Because in non-ECMAScript 5 interpreters there is not possible to provide such protection,
+	 * this implementation of Object.isExtensible always returns true. 
 	 * ECMAScript 5 Reference: 15.2.3.13
-	 * @param {object} 
-	 * @returns {boolean} 
+	 * @param {object} obj an object to examine
+	 * @returns {boolean} always true
+	 * @throws {TypeError} when obj is not an object
 	 */
 	Object.isExtensible || ( Object.isExtensible = function(obj){ 
 		if( !_isObject(obj) ) 
@@ -477,11 +529,12 @@
 	
 	
 	/**
-	 * Returns property descriptor for property of given object
+	 * Returns property descriptor for property of a given object
 	 * ECMAScript 5 Reference: 15.2.3.3
 	 * @since 1.2
 	 * @param {object} obj an object
-	 * @param {string} pname property name to test
+	 * @param {string} pname property name to test; when it doesn't point to a valid property name
+	 * 			the method return undefined
 	 * @returns {object} property descriptor or undefined
 	 * @throws {TypeError} when obj is null or not an object
 	 * @example Object.getOwnPropertyDescriptor(Array.prototype, "length");
@@ -504,7 +557,7 @@
 			// recognize the only cases when ECMAScript 3 protects properties
 			if( (obj===Number && __NUMBER_CONSTS.indexOf(pname)>=0) 
 					|| (obj===Math && __MATH_CONSTS.indexOf(pname)>=0) 
-					|| (pname=='length' && (obj===String.prototype || obj instanceof String 
+					|| (pname=='length' && (obj===String.prototype || __isString(obj) 
 							|| obj===Function.prototype || obj instanceof Function)) ) {
 				editable = false;
 				configurable = false;
@@ -526,7 +579,15 @@
 	(!Object.defineProperty || !Object.defineProperties) && (function(){
 			
 		/**
+		 * Internal method of this library which checks additional conditions in property descriptor object
+		 * in order to limitations in ECMAScript 3. Should be called on a result of __toPropertyDescriptor 
+		 * internal function.
 		 * @private
+		 * @param {Object} desc a property descriptor
+		 * @param {boolean} defaultValue the default value of not provided flags
+		 * @param value the value of a property
+		 * @returns {Object} property descriptor with applied defaults and value 
+		 * @see __toPropertyDescriptor
 		 */
 		var __applyDefaults = function(desc, defaultValue, value) {
 			if(desc.hasOwnProperty("get") || desc.hasOwnProperty("set")) {
@@ -551,7 +612,27 @@
 		if( !Object.defineProperty ) {
 
 			/**
+			 * Creates or redefines a property of an object. The property descriptor can contain one of
+			 * following attributes: value, writable, configurable, enumerable, get, set.
+			 * Get and set properties can't exist together with value or writable.
+			 * 
+			 * WARNING! The full implementation of defineProperty method is impossible with ECMAScript 3
+			 * features. In particular ECMAScript 3 does not allow to make properties non-enumerable, 
+			 * non-configurable or read only. As a consequence when at least on of these flags (enumerable,
+			 * configurable or writable) is set to false, the library will throw an Error.  
+			 * Also accessors (getters and setters) are not a part of ECMAScript 3 and as such they are not
+			 * supported by this library. 
+			 *  
 			 * ECMAScript 5 Reference: 15.2.3.6
+			 * @since 1.2
+			 * @param {Object} obj an object
+			 * @param {string} property a property name
+			 * @param {Object} descriptor a property descriptor
+			 * @returns {Object} obj property modified by property descriptor
+			 * @throws {TypeError} when obj or descriptor is not an object or when property descriptor is 
+			 * 			incorrect (i.e. contains both getter and value)
+			 * @example Object.defineProperty(myObj, "testValue", {
+			 * 				value:1, enumerable:true, writable:true, configurable:true});
 			 */
 			Object.defineProperty = function(obj, property, descriptor){
 				if( !_isObject(obj) ) 
@@ -573,7 +654,28 @@
 		if( !Object.defineProperties ) {
 		
 			/**
+			 * Creates or redefines properties of an object. Each element of 'properties' object
+			 * is a separate property descriptor. Each property descriptor can contain one of
+			 * following attributes: value, writable, configurable, enumerable, get, set.
+			 * Get and set properties can't exist together with value or writable.
+			 * When at least one of the property descriptors fail, all of the changes will be discarded.
+			 * 
+			 * WARNING! The full implementation of defineProperties method is impossible with ECMAScript 3
+			 * features. In particular ECMAScript 3 does not allow to make properties non-enumerable, 
+			 * non-configurable or read only. As a consequence when at least on of these flags (enumerable,
+			 * configurable or writable) is set to false, the library will throw an Error.  
+			 * Also accessors (getters and setters) are not a part of ECMAScript 3 and as such they are not
+			 * supported by this library. 
+			 * 
 			 * ECMAScript 5 Reference: 15.2.3.6
+			 * @since 1.2
+			 * @param {Object} obj an object
+			 * @param {Object} properties a map of property descriptors
+			 * @returns {Object} obj object modified with given property descriptors
+			 * @throws {TypeError} {TypeError} when obj or descriptor is not an object or when property descriptor is incorrect
+			 * 			(i.e. contains both getter and value)
+			 * @example Object.defineProperty(myObj, { testValue: {
+			 * 				value:1, enumerable:true, writable:true, configurable:true}});
 			 */
 			Object.defineProperties=function(obj, properties){
 				if( !_isObject(obj) ) 
@@ -604,9 +706,50 @@
 	})();
 	
 	
+	/**
+	 * Returns an array of object's own property names. It includes only the
+	 * enumerable properties. For all (enumerable and non-enumerable) properties
+	 * use Object.getOwnPropertyNames instead. 
+	 * ECMAScript 5 Reference: 15.2.3.14
+	 * @param obj {object} 
+	 * @returns {Array} array of own property names
+	 * @throws TypeError if the parameter is not an object
+	 * @example Object.keys({a:5}); // should return ["a"] 
+	 * @see Object#getOwnPropertyNames
+	 */	 
+	Object.keys || (Object.keys = function(obj){
+		if( !_isObject(obj) ) 
+			throw new TypeError( obj + " is not an object" );
+		
+		var results = [];
+		for(var key in obj) {
+			obj.hasOwnProperty(key) && results.push(key);
+		}
+		
+		
+		if( __isString(obj) && !__features.STRING_INDEX_ENUMERABLE ) {
+			for(var i=0, len=obj.length; i < len; ++i) {
+				results.push( String(i) );
+			}
+		}
+		
+		return results;
+	});	
+	
+	
+	// Object.getOwnPropertyNames
 	!Object.getOwnPropertyNames && (function(){
 		
+		/**
+		 * Attributes which are marked as non-enumerable by the internal ECMAScript flag.
+		 * Because in ECMAScript 3 there is not possible to set enumerable flag from the
+		 * language level - they should be the only non-enumerable elements in the language.
+		 * (Maybe apart some DOM elements which should be added to this implementation later)
+		 * @private
+		 * @type Array
+		 */
 		var __notEnumerableProperties = (function(){
+			
 			var props = [
 	             {
 	            	 object: Object,
@@ -672,7 +815,7 @@
 	            	 test: function(obj){ return typeof JSON !== 'undefined' && obj === JSON; },
 	            	 keys: ['stringify', 'parse']
 	             },{
-	            	 test: function(obj){ return Array.isArray(obj) || obj instanceof String; },
+	            	 test: function(obj){ return Array.isArray(obj) || __isString(obj); },
 	            	 keys: ['length']
 	             },{
 	            	 test: function(obj){ return obj instanceof RegExp },
@@ -708,12 +851,27 @@
 			}
 			
 			return props;
-		})();
+			
+		})(); // __notEnumerableProperties
 		
+		
+		/**
+		 * Length of non-enumerable properties array
+		 * @private
+		 */
 		var __len = __notEnumerableProperties.length;
 		
-		//console.log(__notEnumerableProperties);
 		
+		/**
+		 * Returns an array of all direct property names of a given object - including the non-enumerable
+		 * properties. It makes the difference between this method and Object.keys. 
+		 * ECMAScript 5 reference: 15.2.3.4
+		 * @since 1.2
+		 * @param {Object} obj an object
+		 * @returns {Array} Array of property names
+		 * @throws {TypeError} when obj is not an object
+		 * @see Object#keys
+		 */
 		Object.getOwnPropertyNames = function(obj){
 			var keys = Object.keys(obj);
 			for(var i=0; i < __len; ++i) {
@@ -733,13 +891,16 @@
 	//-----------------------------------------------------------------------
 	// Private Utils
 
+	
 	/**
+	 * Converts given array-like object to fully-qualified array
 	 * @private
 	 */
 	var _toArray = function(obj, idx1, idx2) {
 		var args = $AP.slice.call( arguments, 1 );
 		return $AP.slice.apply( obj, args );
 	};
+	
 	
 	/**
 	 * Check whether passed argument is an object (considering the fact that function is an object too)
@@ -748,6 +909,12 @@
 	var _isObject = function(obj) {
 		return obj && ( typeof obj === 'object' || typeof obj === 'function' );
 	};
+	
+	
+	var __isString = function(obj) {
+		return typeof obj === 'string' || Object.prototype.toString.call(obj) === '[object String]';
+	};
+	
 	
 	/**
 	 * Returns first valid index of an array
@@ -762,8 +929,9 @@
 		return -1;
 	};
 	
+	
 	/**
-	 * Implementation of inner ECMAScript 5 method ToPropertyDescriptor.
+	 * Implementation of ToPropertyDescriptor inner ECMAScript 5 method.
 	 * ECMAScript 5 reference: 8.10.5
 	 * @private
 	 * @param {object} obj preperty object
@@ -801,23 +969,38 @@
 	
 	
 	/**
-	 * Implementation of internal ECMAScript function IsCallable
+	 * Implementation of IsCallable internal ECMAScript function.
 	 * ECMAScript 5 reference: 9.11
+	 * @private
 	 * @param {object} obj An object to examine
 	 * @returns {boolean} true if object is callable false otherwise
 	 */
-	var __isCallable = function(obj){
-		if( typeof obj === 'function' )
-			return true;
-		if( typeof obj !== 'object' ) 
+	var __isCallable = (function(){ 
+		
+		var __sortCase = (function(){
+				try {
+					[].sort('abc');
+					return false;
+				} catch(ex) {
+					return true;
+				}
+			})();
+		
+		return function(obj){
+			if( typeof obj === 'function' )
+				return true;
+			if( typeof obj !== 'object' ) 
+				return false;
+			if( obj instanceof Function || obj instanceof RegExp )
+				return true;
+			if( __sortCase ) {
+				try {
+					[].sort(obj);
+					return true;
+				} catch(ex){ /* nothing to do */ }
+			}
 			return false;
-		if( obj instanceof Function || obj instanceof RegExp )
-			return true;
-		try {
-			[].sort(obj);
-			return true;
-		} catch(ex){}
-		return false;
-	};
-
+		};
+	})();
+	
 })(this);
