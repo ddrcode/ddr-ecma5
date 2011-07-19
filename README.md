@@ -26,7 +26,7 @@ open  `test/ddr-ecma5-features-test.html` file. Another test file - `ddr-ecma5-t
 a test of the library itself. All tests are using [QUnit](https://github.com/jquery/qunit) framework. 
 
 ## Is it stable?
-Yes it is! The library development started at the end beginning of 2010 and each feature of it has been
+Yes it is! The library development started at the beginning of 2010 and each feature of it has been
 properly tested. Version 1.2 of the library contains all ECMAScript 5 methods which can be implemented 
 with ECMAScript 3 features - means no new methods will be added.  
 Currently the author focuses only on the stability and performance of the library.
