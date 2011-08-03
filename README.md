@@ -1,24 +1,24 @@
 ddr-ecma5
 =========
 
-ddr-ecma5 lets you to write ECMAScript 5 code and run it on older environments like IE6 
+**ddr-ecma5** lets you to write ECMAScript 5 code and run it on older environments like IE6 
 (I know - it must die anyway) or Firefox < 4. It works also perfectly outside the browser 
 - like Rhino, SpiderMonkey, etc. 
 
 ## Installation
-Just add it to your webpage and enjoy<br/> 
+1. In **browser applications** just add the library to your web page and enjoy<br/> 
 
-```html
-<script type="text/javascript" src="ddr-ecma5.js"></script>
-```
+    ```html
+    <script type="text/javascript" src="ddr-ecma5.js"></script>
+    ```
 
-In Rhino/SpiderMonkey environments use `load` function:
+2. In **Rhino/SpiderMonkey** environments use `load` function:
 
-```js
-load('ddr-ecma5.js');
-```
+    ```js
+    load('ddr-ecma5.js');
+    ```
 
-Node.JS - do not bother to load the library to your node projects - V8 supports ECMAScript 5 by itself. 
+3. **Node.JS** - do not bother to load the library to your node projects - V8 supports ECMAScript 5 by itself. 
 
 ## Testing
 If you are curious which functionality of ECMAScript 5 is currently supported by your browser 
@@ -144,4 +144,4 @@ keep the backward compatibility with older browsers without resigning from ECMAS
 Notes<br/>
 <sup>1</sup> - limited functionality in comparison to ECMAScript 5 specification<br/>
 <sup>2</sup> - impossible to implement this feature with ECMAScript 3 functionality<br/>
-<sup>3</sup> - on IE8 Object.defineProperty works only with DOM objects
+<sup>3</sup> - on IE8 Object.defineProperty works only with DOM objects.

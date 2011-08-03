@@ -1,18 +1,18 @@
-/*  ddr-ECMA5 JavaScript library, version 1.2
+/*  
+ *  ddr-ECMA5 JavaScript library, version 1.2.1
  *  (c) 2010 David de Rosier
  *
  *  Licensed under the MIT license.
  *  http://www.opensource.org/licenses/mit-license.php
  *
- *  Revision: 18
- *  Date: 18.07.2011
+ *  Revision: 25
+ *  Date: 04.08.2011
  */
 
 
 (function(global, undefined){
 
 	"use strict";
-	
 	
 	/**
 	 * Checks features of the JavaScript engine 
@@ -23,6 +23,25 @@
 			ACCESSORS: Object.prototype.__defineGetter__ && Object.prototype.__defineSetter__,
 			DOM: typeof window === 'object' && typeof document === 'object'
 		};
+
+	
+	/**
+	 * Safe equivalent of Object.prototype.propertyIsEnumerable. The original method 
+	 * is not available on older versions of IE for global object (same as hasOwnProperty)
+	 * @private 
+	 */
+	var __propertyIsEnumerable = function(obj, property) {
+		if( obj.propertyIsEnumerable ) {
+			return obj.propertyIsEnumerable(property);
+		}
+		for(var key in obj) {
+			if( key === property && (obj.hasOwnProperty ? obj.hasOwnProperty(property) : true) ){
+				return true;
+			}
+		}
+		return false;
+	};
+	
 
 	//-----------------------------------------------------------------------
 	// Function.prototype extensions
@@ -40,10 +59,10 @@
 		if( typeof this !== 'function' )
 			throw new TypeError( "'this' is not a function" );
 		var fn = this, 
-			args = _toArray(arguments,1);
+			args = __toArray(arguments,1);
 			
 		return function() {
-			return fn.apply( ctx, args.concat(_toArray(arguments)) );
+			return fn.apply( ctx, args.concat(__toArray(arguments)) );
 		};
 	});
 
@@ -158,8 +177,8 @@
 	 * 			});
 	 */
 	$AP.every || ($AP.every = function(callback){
-		if( typeof callback !== 'function' )
-			throw new TypeError( callback + " is not a function" );
+		if( !__isCallable(callback) )
+			throw new TypeError( callback + " is not a callable object" );
 
 		var thisArg = arguments[1]; 
 		for(var i=0, len=this.length; i < len; ++i) {
@@ -185,8 +204,8 @@
 	 * @example var containsNull = array.some(function(el){ return el===null });
 	 */
 	$AP.some || ($AP.some = function(callback){
-		if( typeof callback !== 'function' )
-			throw new TypeError( callback + " is not a function" );
+		if( !__isCallable(callback) )
+			throw new TypeError( callback + " is not a callable object" );
 
 		var thisArg = arguments[1]; 
 		for(var i=0, len=this.length; i < len; ++i) {
@@ -208,8 +227,8 @@
 	 * @example [1,2,3].forEach(function(el){ console.log(el); });
 	 */
 	$AP.forEach || ($AP.forEach = function(callback){
-		if( typeof callback !== 'function' )
-			throw new TypeError( callback + " is not a function" );
+		if( !__isCallable(callback) )
+			throw new TypeError( callback + " is not a callable object" );
 
 		var thisArg = arguments[1]; 
 		for(var i=0, len=this.length; i < len; ++i) {
@@ -231,8 +250,8 @@
 	 * @example var squares = [1,2,3].map(function(n){return n*n;});
 	 */
 	$AP.map || ($AP.map = function(callback){
-		if( typeof callback !== 'function' )
-			throw new TypeError( callback + " is not a function" );
+		if( !__isCallable(callback) )
+			throw new TypeError( callback + " is not a callable object" );
 
 		var thisArg = arguments[1],
 			len = this.length,
@@ -257,8 +276,8 @@
 	 * @example var odds = [1,2,3,4].filter(function(n){return n & 1; });
 	 */
 	$AP.filter || ($AP.filter = function(callback){
-		if( typeof callback !== 'function' )
-			throw new TypeError( callback + " is not a function" );
+		if( !__isCallable(callback) )
+			throw new TypeError( callback + " is not a callable object" );
 
 		var thisArg = arguments[1],
 			len = this.length,
@@ -287,8 +306,8 @@
 	 * @example var sum=[1,2,3].reduce(function(s,v){return s+v;}); 
 	 */
 	$AP.reduce || ($AP.reduce = function(callback){
-		if( typeof callback !== 'function' )
-			throw new TypeError( callback + " is not a function" );
+		if( !__isCallable(callback) )
+			throw new TypeError( callback + " is not a callable object" );
 		
 		var len = this.length;
 		if( len === 0 && arguments.length < 2 )
@@ -296,7 +315,7 @@
 		
 		var initIdx = -1;
 		if( arguments.length < 2 ) {
-			if( (initIdx = _firstIndex(this)) === -1 )
+			if( (initIdx = __firstIndex(this)) === -1 )
 				throw new TypeError( "reduce of empty array with no initial value" );				
 		}
 		
@@ -322,8 +341,8 @@
 	 * @example [10,20,30].reduceRight(function(a,b){return a-b;}) === 0
 	 */
 	$AP.reduceRight || ($AP.reduceRight = function(callback){
-		if( typeof callback !== 'function' )
-			throw new TypeError( callback + " is not a function" );
+		if( !__isCallable(callback) )
+			throw new TypeError( callback + " is not a callable object" );
 		
 		var len = this.length;
 		if( len === 0 && arguments.length < 2 )
@@ -426,13 +445,13 @@
 	if( !Object.getPrototypeOf ) {
 		if( "".__proto__ ) {
 			Object.getPrototypeOf = function(obj) {
-				if( !_isObject(obj) ) 
+				if( !__isObject(obj) ) 
 					throw new TypeError( obj + " is not an object" );
 				return obj.__proto__;
 			};
 		} else {
 			Object.getPrototypeOf = function(obj) {
-				if( !_isObject(obj) ) 
+				if( !__isObject(obj) ) 
 					throw new TypeError( obj + " is not an object" );
 				return obj.constructor ? obj.constructor.prototype : null;
 			};
@@ -466,7 +485,7 @@
 		var __TmpConstructor = function(){};
 		
 		return function(proto, properties) {
-			if( !_isObject(proto) ) 
+			if( !__isObject(proto) ) 
 				throw new TypeError( proto + " is not an object" );
 			
 			__TmpConstructor.prototype = proto;
@@ -489,7 +508,7 @@
 	 * @throws {TypeError} when obj is not an object
 	 */
 	Object.isSealed || ( Object.isSealed = function(obj){ 
-		if( !_isObject(obj) ) 
+		if( !__isObject(obj) ) 
 			throw new TypeError( obj+" is not an object" );
 		return false; 
 	});
@@ -505,7 +524,7 @@
 	 * @throws {TypeError} when obj is not an object
 	 */	
 	Object.isFrozen || ( Object.isFrozen = function(obj){
-		if( !_isObject(obj) ) 
+		if( !__isObject(obj) ) 
 			throw new TypeError( obj+" is not an object" );
 		return false; 		
 	});
@@ -522,7 +541,7 @@
 	 * @throws {TypeError} when obj is not an object
 	 */
 	Object.isExtensible || ( Object.isExtensible = function(obj){ 
-		if( !_isObject(obj) ) 
+		if( !__isObject(obj) ) 
 			throw new TypeError( obj+" is not an object" );
 		return true; 
 	});	
@@ -545,7 +564,7 @@
 			__MATH_CONSTS = ['PI','E','LN2','LOG2E','LOG10E','SQRT1_2','SQRT2'];
 		
 		return function(obj, pname){
-			if( !_isObject(obj) ) 
+			if( !__isObject(obj) ) 
 				throw new TypeError( obj+" is not an object" );
 			
 			if( !(pname in obj) )
@@ -567,7 +586,7 @@
 			
 			return {
 				writable: editable,
-				enumerable: obj.propertyIsEnumerable ? obj.propertyIsEnumerable(pname) : true,
+				enumerable: __propertyIsEnumerable(obj,pname),
 				configurable: configurable,
 				value: obj[pname]
 			};
@@ -635,7 +654,7 @@
 			 * 				value:1, enumerable:true, writable:true, configurable:true});
 			 */
 			Object.defineProperty = function(obj, property, descriptor){
-				if( !_isObject(obj) ) 
+				if( !__isObject(obj) ) 
 					throw new TypeError( obj+" is not an object" );
 				
 				var pname = String(property);
@@ -678,7 +697,7 @@
 			 * 				value:1, enumerable:true, writable:true, configurable:true}});
 			 */
 			Object.defineProperties=function(obj, properties){
-				if( !_isObject(obj) ) 
+				if( !__isObject(obj) ) 
 					throw new TypeError( obj+" is not an object" );
 				
 				var properties = Object( properties );
@@ -718,12 +737,13 @@
 	 * @see Object#getOwnPropertyNames
 	 */	 
 	Object.keys || (Object.keys = function(obj){
-		if( !_isObject(obj) ) 
+		if( !__isObject(obj) ) 
 			throw new TypeError( obj + " is not an object" );
 		
 		var results = [];
+		// key in obj is tricky here, but in IE global object doesn't have hasOwnPropertyMethod
 		for(var key in obj) {
-			obj.hasOwnProperty(key) && results.push(key);
+			(obj.hasOwnProperty ? obj.hasOwnProperty(key) : key in obj) && results.push(key);
 		}
 		
 		
@@ -808,7 +828,7 @@
 	             },{
 	            	 object: global,
 	            	 keys: ['TypeError', 'decodeURI', 'parseFloat', 'Number', 'URIError', 'encodeURIComponent', 'RangeError', 'ReferenceError', 
-	            	        'RegExp', 'Array', 'isNaN', 'Date', 'Infinity', 'Boolean', 'Error', 'NaN', 'execScript', 'String', 'Function', 
+	            	        'RegExp', 'Array', 'isNaN', 'Date', 'Infinity', 'Boolean', 'Error', 'NaN', 'String', 'Function', 
 	            	        'Math', 'undefined', 'encodeURI', 'escape', 'unescape', 'decodeURIComponent', 'EvalError', 'SyntaxError', 'Object', 
 	            	        'eval', 'parseInt', 'JSON', 'isFinite']
 	             },{
@@ -836,13 +856,13 @@
 						props[i].keys.push('constructor');
 					}
 					for( var j=props[i].keys.length-1; j>=0; --j ) {
-						if( !(props[i].keys[j] in props[i].object) || props[i].object.propertyIsEnumerable(props[i].keys[j]) ) {
+						if( !(props[i].keys[j] in props[i].object) || __propertyIsEnumerable(props[i].object,props[i].keys[j]) ) {
 							props[i].keys.splice(j,1);
 						}
 					}
 				} else if( props[i].test && props[i].testValue && props[i].test(props[i].testValue) ) {
 					for( var j=props[i].keys.length-1; j>=0; --j ) {
-						if( !(props[i].keys[j] in props[i].testValue) || props[i].testValue.propertyIsEnumerable(props[i].keys[j]) ) {
+						if( !(props[i].keys[j] in props[i].testValue) || __propertyIsEnumerable(props[i].testValue,props[i].keys[j]) ) {
 							props[i].keys.splice(j,1);
 						}
 					}
@@ -896,17 +916,17 @@
 	 * Converts given array-like object to fully-qualified array
 	 * @private
 	 */
-	var _toArray = function(obj, idx1, idx2) {
-		var args = $AP.slice.call( arguments, 1 );
-		return $AP.slice.apply( obj, args );
-	};
+    var __toArray = function(obj, idx1, idx2) {
+        var args = $AP.slice.call( arguments, 1 );
+        return $AP.slice.apply( obj, args );
+    };
 	
 	
 	/**
 	 * Check whether passed argument is an object (considering the fact that function is an object too)
 	 * @private
 	 */
-	var _isObject = function(obj) {
+	var __isObject = function(obj) {
 		return obj && ( typeof obj === 'object' || typeof obj === 'function' );
 	};
 	
@@ -920,7 +940,7 @@
 	 * Returns first valid index of an array
 	 * @private
 	 */
-	var _firstIndex = function(arr) {
+	var __firstIndex = function(arr) {
 		for( var k=0, len=arr.length; k < len; ++k ) {
 			if( arr.hasOwnProperty(String(k)) ) {
 				return k;
@@ -934,8 +954,8 @@
 	 * Implementation of ToPropertyDescriptor inner ECMAScript 5 method.
 	 * ECMAScript 5 reference: 8.10.5
 	 * @private
-	 * @param {object} obj preperty object
-	 * @return {object} property descriptor
+	 * @param {Object} obj a property object
+	 * @returns {Object} a property descriptor
 	 */
 	var __toPropertyDescriptor = function(obj){
 		if( !obj || typeof obj !== 'object' )
@@ -1002,5 +1022,6 @@
 			return false;
 		};
 	})();
+	
 	
 })(this);
