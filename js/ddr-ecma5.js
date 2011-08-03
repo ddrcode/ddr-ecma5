@@ -1,11 +1,11 @@
 /*  
- *  ddr-ECMA5 JavaScript library, version 1.2.1
+ *  ddr-ECMA5 JavaScript library, version 1.2.2RC
  *  (c) 2010 David de Rosier
  *
  *  Licensed under the MIT license.
  *  http://www.opensource.org/licenses/mit-license.php
  *
- *  Revision: 25
+ *  Revision: 26
  *  Date: 04.08.2011
  */
 
@@ -59,10 +59,10 @@
 		if( typeof this !== 'function' )
 			throw new TypeError( "'this' is not a function" );
 		var fn = this, 
-			args = __toArray(arguments,1);
+			args = $AP.slice.call(arguments,1);
 			
 		return function() {
-			return fn.apply( ctx, args.concat(__toArray(arguments)) );
+			return fn.apply( ctx, args.concat(Array.prototype.slice.call(arguments)) );
 		};
 	});
 
@@ -911,16 +911,6 @@
 	//-----------------------------------------------------------------------
 	// Private Utils
 
-	
-	/**
-	 * Converts given array-like object to fully-qualified array
-	 * @private
-	 */
-    var __toArray = function(obj, idx1, idx2) {
-        var args = $AP.slice.call( arguments, 1 );
-        return $AP.slice.apply( obj, args );
-    };
-	
 	
 	/**
 	 * Check whether passed argument is an object (considering the fact that function is an object too)
