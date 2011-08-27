@@ -141,6 +141,7 @@ test( "Object.keys", function(){
 	ok( utils.assertError(function(){ Object.keys();}), "no arguments" );
 	ok( !utils.assertError(function(){ Object.keys(function(){});}), "function" );
 	ok( utils.contains(Object.keys(new String("abc")), "1"), "String");
+	ok( utils.contains(Object.keys("abc"), "1"), "String");
 	ok( !utils.assertError(function(){ Object.keys(window); }), "global" );
 	ok( !utils.contains(Object.keys(Array.prototype), "slice"), "not-enumerable method");
 	
